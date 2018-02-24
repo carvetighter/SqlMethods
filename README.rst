@@ -26,7 +26,7 @@ need multple instances of the class.
     sql_srvr = SqlMethods(list_args)
     print(sql_svr.bool_is_connected)
 
-| **Connect to the Sql Server ouput:
+| **Connect to the Sql Server ouput**:
 
 ::
     True # if connection is established
@@ -63,7 +63,7 @@ a pandas datafarme.
 |
 | example:
 ::
-    
+
     list_table_columns = sql_srvr.get_table_columns('table_name')
     if list_table_columns[0] and list_query_results[0]:
         df_sql_query = pandas.DataFrame(data = list_query_results[1], columns = list_table_columns[1])
