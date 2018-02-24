@@ -38,6 +38,7 @@ need multple instances of the class.
 | Assuming a connection (sql_srvr) is established.
 
 ::
+
     # simple query
     string_query = 'select top 10 * from dbo.table'
     list_query_results = sql_srvr.query_select(string_query)
@@ -53,6 +54,7 @@ need multple instances of the class.
 | 
 | example:
 ::
+
     list_results_for_series = [x[0] for x in list_query_results[1]]
     series_one_column = pandas.Series(data = list_results_for_series, name = 'column_name')
 
@@ -61,6 +63,7 @@ a pandas datafarme.
 |
 | example:
 ::
+    
     list_table_columns = sql_srvr.get_table_columns('table_name')
     if list_table_columns[0] and list_query_results[0]:
         df_sql_query = pandas.DataFrame(data = list_query_results[1], columns = list_table_columns[1])
