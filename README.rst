@@ -20,6 +20,7 @@ Each class instance can only connect to one database.  To connect to multiple da
 need multple instances of the class.
 
 ::
+
     from SqlMethods import SqlMethods
     list_args = [r'login name', r'server name', r'passwrod', r'database name']
 
@@ -29,6 +30,7 @@ need multple instances of the class.
 | **Connect to the Sql Server ouput**:
 
 ::
+    
     True # if connection is established
     # or
     False # if connection is not established
