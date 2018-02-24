@@ -1,67 +1,68 @@
-Random Access File Reader
+SqlMethods
 -------------------------
 
-| This is a small library that allows for reading any given line in a file without having to read all the lines before it
-  or load the entire file into memory.  Only the line indexes and lengths are held in memory, which enables random
-  access even on very large files for a very minuscule memory cost.
+| This package is disigned to be a light wight wrapper for pymssql used for Miscrosoft SQL Server.  This
+was developed as I was working with Sql Servers to make it easy and quick to do a lot of the 
+functionality that would duplicate code for in Data Science my projects.  This is not a comprehensive 
+list of functionality but the most popular ones I used.  This version does not support Azure at the 
+moment.  That will come in a later version.
 
 Installation
 ============
-``pip install random-access-file-reader``
+``pip install SqlMethods``
 
 Usage
 =====
+|
+| **Connect to the SQL Server:**
 
-| Usage is very straightforward, and standard csv line endings (newline character), value delimiter (comma), and
-  quotation character (double quote) are the defaults.  These can be changed in the constructor.
-|
-| The ``get_line()`` and ``get_line_dicts()`` methods return a list of rows.
-|
-| **Plain text file example:**
+Each class instance can only connect to one database.  To connect to multiple databases you will
+need multple instances of the class.
 
 ::
+    from SqlMethods import SqlMethods
+    list_args = [r'login name', r'server name', r'passwrod', r'database name']
 
-    from randomAccessReader import RandomAccessReader
+    sql_srvr = SqlMethods(list_args)
+    print(sql_svr.bool_is_connected)
 
-    reader = RandomAccessReader('~/myfile.txt')
-
-    # single line
-    line = reader.get_lines(2)[0]
-    print line
-
-    # multiple lines
-    lines = reader.get_lines(3, 3)
-    for l in lines:
-        print l
-
-| Optional arguments in the constructor:
-
-- ``endline_character`` - self-explanatory (default is endline character ``\n``)
-- ``ignore_blank_lines`` - if set to ``True``, blank lines in the file will not be read or indexed (default is ``False``)
-
-|
-| **Csv example:**
+| **Connect to the Sql Server ouput:
 
 ::
+    True # if connection is established
+    # or
+    False # if connection is not established
 
-    from randomAccessReader import CsvRandomAccessReader
-    reader = CsvRandomAccessReader('~/myfile.csv')
+| **Query database:**
+| 
+| Assuming a connection (sql_srvr) is established.
 
-    # single line
-    line = reader.get_line_dicts(5)[0]
-    for x in line:
-        print x + " = " line[x]
+::
+    # simple query
+    string_query = 'select top 10 * from dbo.table'
+    list_query_results = sql_srvr.query_select(string_query)
 
-    # multiple lines
-    lines = reader.get_line_dicts(6, 6)
-    for l in lines:
-        for x in l:
-            print x + " = " l[x]
+| The list returned is a list of length 2.
+| list_query_results[0] -> boolean; True or False
+| list_query_results[1] -> potentially a multidimensional list of values from the query; in this case the first 10 records
+|   if list_query_results[0] is True list_query_results[1] will have the data
+|   if list_query_results[0] is False list_query_results[1] will have the error message from the Sql Server
+|
+| Note: if you are pulling only one column or your results results in a sinlge column of data.  You will
+| need to use a list comprehension to be able to add it to a pandas Series.
+| 
+| example:
+::
+    list_results_for_series = [x[0] for x in list_query_results[1]]
+    series_one_column = pandas.Series(data = list_results_for_series, name = 'column_name')
 
-| Optional arguments in the constructor:
+| If your query reults in more than one column of data you can use the following code to add it to
+a pandas datafarme.
+|
+| example:
+::
+    list_table_columns = sql_srvr.get_table_columns('table_name')
+    if list_table_columns[0] and list_query_results[0]:
+        df_sql_query = pandas.DataFrame(data = list_query_results[1], columns = list_table_columns[1])
 
-- ``endline_character`` - self-explanatory (default is endline character ``\n``)
-- ``ignore_blank_lines`` - if set to ``True``, blank lines in the file will not be read or indexed (default is ``True``)
-- ``values_delimiter`` - character used by the csv to separate values within a line (default is ``,``)
-- ``quotechar`` - character used by the csv to surround values that contain the value delimiting character (default is ``"``)
-- ``ignore_corrupt`` - if set to ``True``, lines with an invalid length will return blank instead of raising an exception (default is ``False``)
+| continued...
