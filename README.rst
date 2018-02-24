@@ -30,13 +30,12 @@ need multple instances of the class.
 | **Connect to the Sql Server ouput**:
 
 ::
-    
+
     True # if connection is established
     # or
     False # if connection is not established
 
 | **Query database:**
-| 
 | Assuming a connection (sql_srvr) is established.
 
 ::
@@ -61,7 +60,7 @@ need multple instances of the class.
     series_one_column = pandas.Series(data = list_results_for_series, name = 'column_name')
 
 | If your query reults in more than one column of data you can use the following code to add it to
-a pandas datafarme.
+| a pandas datafarme.
 |
 | example:
 ::
