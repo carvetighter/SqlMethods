@@ -13,7 +13,6 @@ Installation
 
 Usage
 =====
-|
 | **Connect to the SQL Server:**
 
 Each class instance can only connect to one database.  To connect to multiple databases you will
