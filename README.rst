@@ -116,9 +116,7 @@ need multple instances of the class.
 | alter_table() -> changes the columns (add, delete, modify) in a table
 | 
 | **Close connection:**
-|
 | The last and also important aspect of the table is to close the connection.
 | 
 | example:
-::
     sql_srvr.close()
