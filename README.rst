@@ -93,7 +93,6 @@ need multple instances of the class.
     list_insert = df_sql_query.values.tolist()
 
 | The following example will insert into the table created above:
-| 
 ::
 
     if bool_table_exists:
