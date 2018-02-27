@@ -79,7 +79,7 @@ need multple instances of the class.
     bool_table_exists = sql_srvr.table_exists(string_table_name)
     if not bool_table_exists:
         list_create_table = sql_srvr.create_table(string_table_name, 
-                                        ['int_id int', 'date_record datetime', 'string_customer varchar(100)'])
+                                ['int_id int', 'date_record datetime', 'string_customer varchar(100)'])
         bool_table_exists = list_create_table[0]
     
 | The columns are in a list with the column name and data type.  The when the table is created
@@ -97,7 +97,7 @@ need multple instances of the class.
 
     if bool_table_exists:
         list_insert_results = sql_srvr.insert(string_table_name, list_table_columns, 
-                                            df_sql_query.values.tolist())
+                                    df_sql_query.values.tolist())
 
 | The method will insert 100,000 records at a time.
 
