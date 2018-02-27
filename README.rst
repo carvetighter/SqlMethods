@@ -103,3 +103,22 @@ need multple instances of the class.
 | as ``list_query_results``.  The first value is a boolean determining if the insert completed with no
 | errors.  The second values will be an empy list of the first value is ``True``.  If the first value is 
 | ``False`` then the error message will be in the second postion of the list.
+|
+| **Other methods:**
+| Other functions in the package are:
+|
+| delete_table() -> deletes a table in the database
+| truncate_table() -> clears the table in the database
+| update() -> changes values in the table based on specific criteria
+| delete_records() -> removes records from the directory
+| get_wide_columns() -> finds the columns of a wide / sparse table
+| get_num_columns() -> returns the number of columns in a table
+| alter_table() -> changes the columns (add, delete, modify) in a table
+| 
+| **Close connection:**
+|
+| The last and also important aspect of the table is to close the connection.
+|
+| example:
+::
+    sql_srvr.close()
