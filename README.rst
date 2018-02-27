@@ -97,7 +97,7 @@ need multple instances of the class.
 
     if bool_table_exists:
         list_insert_results = sql_srvr.insert(string_table_name, list_table_columns, 
-                                    df_sql_query.values.tolist())
+                                df_sql_query.values.tolist())
 
 | The method will insert 100,000 records at a time.
 
