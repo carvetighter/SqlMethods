@@ -70,7 +70,6 @@ need multple instances of the class.
         df_sql_query = pandas.DataFrame(data = list_query_results[1], columns = list_table_columns[1])
 
 | **Insert into database:**
-|
 | Before you insert it is a good idea to check if the table is created.  The below example illistrates how
 | to insert into the table and check if the table is created.
 |
