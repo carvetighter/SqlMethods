@@ -99,5 +99,7 @@ need multple instances of the class.
         list_insert_results = sql_srvr.insert(string_table_name, list_table_columns, 
                                 df_sql_query.values.tolist())
 
-| The method will insert 100,000 records at a time.
-
+| The method will insert 100,000 records at a time.  In ``list_insert_results`` the format is the same
+| as ``list_query_results``.  The first value is a boolean determining if the insert completed with no
+| errors.  The second values will be an empy list of the first value is ``True``.  If the first value is 
+| ``False`` then the error message will be in the second postion of the list.
