@@ -44,6 +44,7 @@ need multple instances of the class.
     list_query_results = sql_srvr.query_select(string_query)
 
 | The list returned is a list of length 2.
+|
 | list_query_results[0] -> boolean; True or False
 | list_query_results[1] -> potentially a multidimensional list of values from the query; in this case the first 10 records
 |   if list_query_results[0] is True list_query_results[1] will have the data
