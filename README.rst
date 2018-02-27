@@ -119,4 +119,5 @@ need multple instances of the class.
 | The last and also important aspect of the table is to close the connection.
 | 
 | example:
+::
     sql_srvr.close()
