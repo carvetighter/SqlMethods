@@ -118,7 +118,7 @@ need multple instances of the class.
 | **Close connection:**
 |
 | The last and also important aspect of the table is to close the connection.
-|
+| 
 | example:
 ::
     sql_srvr.close()
