@@ -121,3 +121,4 @@ need multple instances of the class.
 | example:
 ::
     sql_srvr.close()
+    
