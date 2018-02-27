@@ -68,4 +68,37 @@ need multple instances of the class.
     if list_table_columns[0] and list_query_results[0]:
         df_sql_query = pandas.DataFrame(data = list_query_results[1], columns = list_table_columns[1])
 
-| continued...
+| **Insert into database:**
+|
+| Before you insert it is a good idea to check if the table is created.  The below example illistrates how
+| to insert into the table and check if the table is created.
+|
+| example (check table or create):
+::
+
+    bool_table_exists = sql_srvr.table_exists(string_table_name)
+    if not bool_table_exists:
+        list_create_table = sql_srvr.create_table(string_table_name, 
+                                        ['int_id int', 'date_record datetime', 'string_customer varchar(100)'])
+        bool_table_exists = list_create_table[0]
+    
+| The columns are in a list with the column name and data type.  The when the table is created
+| the data compression is enable and the table is a narrow table (1,024 columns or less).
+|
+| When inserting into the table the method will determine if you are inerting one value or more than
+| by the lenght of the list of values.  This needs to be a list of lists.  An easy way to convert a pandas
+| dataframe is to use the following line of code:
+::
+    
+    list_insert = df_sql_query.values.tolist()
+
+| The following example will insert into the table created above:
+| 
+::
+
+    if bool_table_exists:
+        list_insert_results = sql_srvr.insert(string_table_name, list_table_columns, 
+                                            df_sql_query.values.tolist())
+
+| The method will insert 100,000 records at a time.
+
