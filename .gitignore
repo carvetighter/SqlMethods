@@ -6,5 +6,6 @@ __pycache__
 .vscode
 SqlMethods/__pycache__
 SqlMethods/.vscode
+tests/__pycache__
 
 # files to ignore
