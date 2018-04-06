@@ -27,5 +27,5 @@ from test_00 import main
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
 if __name__ == '__main__':
-    list_sql_args = ['Frosty-SB-02\FROSTY SB 02', 'suM~=EqNV\D1']
+    list_sql_args = [r'Frosty-SB-02\FROSTY SB 02', r'suM~=EqNV\D1']
     main(list_sql_args)
