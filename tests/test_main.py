@@ -27,5 +27,6 @@ from test_00 import main
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
 if __name__ == '__main__':
-    list_sql_args = []
-    main(list_sql_args)
+    dict_sql_args = {'user':'Frosty-SB-02\FROSTY SB 02', 
+                            'password':'suM~=EqNV\D1'}
+    main(dict_sql_args)
