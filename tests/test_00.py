@@ -127,7 +127,7 @@ def def_Methods(list_cluster_results, array_sparse_matrix):
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
-def main(dict_args = dict()):
+def main(list_args = []):
     '''
     this is the main method tests the bulk insert and single insert for the SqlInsertIntoTable method
      
@@ -135,11 +135,11 @@ def main(dict_args = dict()):
     None
     
     Inputs:
-    dict_args
-    Type: dictionary
+    list_args
+    Type: list
     Desc: arguements for login to the sql server
-    'user' -> type: string; user name
-    'password' -> type: string; password
+    list_args[0] -> type: string; user name
+    list_args[1] -> type: string; password
         
       
     Important Info:
