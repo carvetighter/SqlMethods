@@ -188,12 +188,35 @@ def main(list_args = []):
     #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
 
     #--------------------------------------------------------------------------#
-    # comment
+    # create test insert
     #--------------------------------------------------------------------------#
 
+    tup_record = (0.33, 3, '03')
+    list_insert = list()
+    for int_i in range(0, 300):
+        list_insert.append(tup_record)
+
     #--------------------------------------------------------------------------#
-    # generate insert list
+    # get table columns
     #--------------------------------------------------------------------------#
+
+    list_table_columns = sql_local.get_table_columns(string_sql_table)
+    
+    #--------------------------------------------------------------------------#
+    # insert into databse
+    #--------------------------------------------------------------------------#
+
+    if list_table_columns[0]:
+        list_results_insert = sql_local.insert(string_sql_table, 
+                                            list_table_columns[1], 
+                                            list_insert)
+    else:
+        print('Did not retrieve columns check query & connection')
+
+    if list_results_insert[0]:
+        print('Insert successful.')
+    else:
+        print('Insert produced errors check data.')
 
     #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
     #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -206,6 +229,5 @@ def main(list_args = []):
     #--------------------------------------------------------------------------#
     # variable / object cleanup
     #--------------------------------------------------------------------------#
-
-    pass
-
+    
+    sql_local.close()
