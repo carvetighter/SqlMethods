@@ -1202,6 +1202,9 @@ class SqlMethods(object):
                     bool_insert_into_table = False
                 else:
                     list_commit = self._commit()
+                    if not list_commit[0]:
+                        str_sql_error += list_commit[1]
+                        bool_insert_into_table = False
                 finally:
                     pass
 
