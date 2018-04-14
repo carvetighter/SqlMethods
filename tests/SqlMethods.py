@@ -203,10 +203,13 @@ class SqlMethods(object):
         None
         
         Return:
-        variable
-        Type: boolean
-        Desc: True of the transaction has been committed or False if there is an
-            error
+        object
+        Type: list
+        Desc: boolean if the commit occured and the error if there is any
+        list_return[0] -> type: boolean; flag to indicate if the commit executed
+                                without and error
+        list_return[1] -> type: string; the error message or an empty string if
+                                no error
         '''
 
         #--------------------------------------------------------------------------#
@@ -221,11 +224,11 @@ class SqlMethods(object):
         # lists declarations
         #--------------------------------------------------------------------------#
 
+        list_return = list()
+
         #--------------------------------------------------------------------------#
         # variables declarations
         #--------------------------------------------------------------------------#
-
-        bool_commit = False
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -236,8 +239,26 @@ class SqlMethods(object):
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
 
         #--------------------------------------------------------------------------#
-        # sub-section comment
+        # test for connection then commit
         #--------------------------------------------------------------------------#
+
+        if self._list_conn[0]:
+            try:
+                self._list_conn[1].commit()
+            except pymssql.OperationalError as oe:
+                bool_commit = False
+                string_error = str(oe.args)
+            except pymssql.Error as e:
+                bool_commit = False
+                string_error = str(e.args)
+            else:
+                bool_commit = True
+                string_error = ''
+            finally:
+                list_return = [bool_commit, string_error]
+        else:
+            list_return = [False, 
+                                ValueError('attempted to commit with no connection')]
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -848,7 +869,7 @@ class SqlMethods(object):
                 str_sql_error += str(e.args)
             else:
                 bool_deleted = True
-                self._list_conn[1].commit()
+                list_commit = self._commit()
             finally:
                 pass
     
@@ -916,7 +937,7 @@ class SqlMethods(object):
                 str_sql_error += str(e.args)
             else:
                 bool_truncate_table = True
-                #self._list_conn[1].commit()
+                list_commit = self._commit()
             finally:
                 pass
 
@@ -1180,8 +1201,7 @@ class SqlMethods(object):
                     str_sql_error += ';General error raised|' + str(e.args)
                     bool_insert_into_table = False
                 else:
-                    pass
-                    self._list_conn[1].commit()
+                    list_commit = self._commit()
                 finally:
                     pass
 
@@ -1311,7 +1331,7 @@ class SqlMethods(object):
                 str_sql_error += str(e.args)
             else:
                 bool_created = True
-                self._list_conn[1].commit()
+                list_commit = self._commit()
             finally:
                 pass
 
@@ -1467,7 +1487,7 @@ class SqlMethods(object):
                 else:
                     string_error = ''
                     bool_return = True
-                    #self._list_conn[1].commit()
+                    list_commit = self._commit()
                 finally:
                     pass
 
@@ -1586,7 +1606,7 @@ class SqlMethods(object):
                 str_sql_error += str(se.args)
             else:
                 bool_insert_into_table = True
-                #self._list_conn[1].commit()
+                list_commit = self._commit()
             finally:
                 pass
 
@@ -1911,7 +1931,7 @@ class SqlMethods(object):
                 str_sql_error += str(e.args)
             else:
                 bool_alter_table = True
-                #self._list_conn[1].commit()
+                list_commit = self._commit()
             finally:
                 pass
 
