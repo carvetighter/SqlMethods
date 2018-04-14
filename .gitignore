@@ -7,6 +7,10 @@ __pycache__
 SqlMethods/__pycache__
 SqlMethods/.vscode
 tests/__pycache__
-tests/test_main
+bulk_insert/__pycache__
+
 
 # files to ignore
+tests/test_main.py
+tests/test_connection.py
+bulk_insert/bi_main.py
