@@ -2047,7 +2047,9 @@ class SqlMethods(object):
                 the list
             
         Important Info:
-        None
+        1. assumes all csv's have a header for the column name
+        2. assumes there are no sub-directories in the target directory or all
+            the desired csv's are in the top level of the target directory
         
         Return:
         object
@@ -2075,6 +2077,7 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         bool_files = False
+        string_f_option = 'all'
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -2105,13 +2108,15 @@ class SqlMethods(object):
         
         # only one file
         elif isinstance(m_var_files, str):
+            string_f_option = 'one'
             set_files = self._get_files(m_string_path)
             if m_var_files in set_files:
                 bool_files = True
-        
+                
         # multiple files but not all files in folder
         elif isinstance(m_var_files, collections.Sequence) and not 
                 isinstance(m_var_files, str):
+            string_f_option = 'multiple'
             set_files = self._get_files(m_string_path)
             for string_temp_file in m_var_files:
                 if string_temp_file in set_files:
@@ -2133,12 +2138,33 @@ class SqlMethods(object):
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$# 
 
-        #--------------------------------------------------------------------------#
-        # variable / object cleanup
-        #--------------------------------------------------------------------------#
-
         if bool_files and self._list_conn[0]:
-            pass
+            #--------------------------------------------------------------------------#
+            # delete table if exists
+            #--------------------------------------------------------------------------#
+
+            df_meta_files = self._bi_meta_files(string_f_option, set_files)
+
+            #--------------------------------------------------------------------------#
+            # delete table if exists
+            #--------------------------------------------------------------------------#
+
+            if self.table_exists(m_string_table):
+                bool_dt_process = self.delete_table(m_string_table)
+
+            
+        elif not bool_files:
+            string_bf = 'the files option passed to m_var_files did not validate'
+            string_bf += ', check the option and the files in designated folder'
+            list_return = [False, string_bf]
+        elif not self._list_conn[0]:
+            string_ce = 'there is not a connection to the database'
+            string_ce += ', check connection and try again'
+            list_return = [False, string_ce]
+        else:
+            string_ue = 'validation failed for unkown reason'
+            list_return = [False, string_ue]
+
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -2157,3 +2183,86 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         return list_return
+    
+    def _bi_meta_files(m_string_file_flag, m_set_files):
+    '''
+    this method gathers meta data on the designated files; the data gathered
+    is the file name, length (number of lines), max string length of column, column
+    names
+    
+    Requirements:
+    package pandas
+    
+    Inputs:
+    m_string_file_flag
+    Type: string
+    Desc: the flag to determine how to get the metadata from each file
+    
+    m_set_files
+    Type: set
+    Desc: strings which represent the files in the target directory
+
+    Important Info:
+    None
+    
+    Return:
+    object
+    Type: pandas DataFrame
+    Desc: metadata on files
+    string_file -> type: string; name of file
+    int_length -> type: int; the length of each file, number of records 
+                        (excludes header)
+    int_max_string -> type: int; max length of an element in all columns when
+                        converted to a string; there should only be on per file
+    string_col_00 -> type: string; the name of the first column of file;
+                        this will vary depending on the number of columns which will be
+                        the file with the most columns; string_col_01, string_col_02, 
+                        string_col_03, etc...; for files that have less columns None will
+                        be in the DataFrame column for that file
+    '''
+
+    #--------------------------------------------------------------------------#
+    # objects declarations
+    #--------------------------------------------------------------------------#
+
+    #--------------------------------------------------------------------------#
+    # time declarations
+    #--------------------------------------------------------------------------#
+
+    #--------------------------------------------------------------------------#
+    # lists declarations
+    #--------------------------------------------------------------------------#
+
+    #--------------------------------------------------------------------------#
+    # variables declarations
+    #--------------------------------------------------------------------------#
+
+    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+    #
+    # Start
+    #
+    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+    #--------------------------------------------------------------------------#
+    # sub-section comment
+    #--------------------------------------------------------------------------#
+
+    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+    #
+    # sectional comment
+    #
+    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+    #--------------------------------------------------------------------------#
+    # variable / object cleanup
+    #--------------------------------------------------------------------------#
+
+    #--------------------------------------------------------------------------#
+    # return value
+    #--------------------------------------------------------------------------#
+
+    return list_return
