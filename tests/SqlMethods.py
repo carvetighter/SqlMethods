@@ -281,6 +281,76 @@ class SqlMethods(object):
 
         return list_return
 
+    def _get_files(m_string_path):
+        '''
+        this method returns a set of files in the directory of csv files
+        
+        Requirements:
+        package os
+        
+        Inputs:
+        m_string_path
+        Type: string
+        Desc: the path of the directory with bulk upload files
+
+        Important Info:
+        None
+        
+        Return:
+        object
+        Type: set
+        Desc: files in the directory
+        '''
+
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # lists declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # sub-section comment
+        #--------------------------------------------------------------------------#
+
+        for _, _, list_files in os.walk(m_string_path):
+            break
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # sectional comment
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # variable / object cleanup
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return set(list_files)
+
     def gen_connection(self, m_string_user, m_string_host, m_string_pswd, m_string_db_name):
         '''
         this creates a connect to the designated sql server (m_string_host) and database and returns that connection
@@ -2004,6 +2074,8 @@ class SqlMethods(object):
         # variables declarations
         #--------------------------------------------------------------------------#
 
+        bool_files = False
+
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #
@@ -2013,8 +2085,27 @@ class SqlMethods(object):
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
 
         #--------------------------------------------------------------------------#
-        # sub-section comment
+        # test to begin process
         #--------------------------------------------------------------------------#
+
+        # file test
+        if m_var_files == 'all':
+            bool_files = True
+        elif isinstance(m_var_files, str):
+            set_files = self._get_files(m_string_path)
+            if m_var_files in set_files:
+                bool_files = True
+        elif isinstance(m_var_files, collections.Sequence) and not 
+                isinstance(m_var_files, str):
+            set_files = self._get_files(m_string_path)
+            for string_temp_file in m_var_files:
+                if string_temp_file in set_files:
+                    bool_files = True
+                else:
+                    bool_files = False
+                    break
+        else:
+            pass
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
