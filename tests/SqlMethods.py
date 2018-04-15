@@ -72,6 +72,9 @@ class SqlMethods(object):
     get_wide_columns()
             - check the columns from the table
 
+    bulk_insert()
+            - inserts files from a designated folder into a table as strings
+    
     Attributes:
     bool_is_connected
             - flag to determine if the connection is open or closed
@@ -1946,3 +1949,87 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
         return [bool_alter_table, string_error]
+
+    def bulk_insert(self, m_string_table, m_string_path, m_var_files = 'all'):
+         '''
+        this method impliments the bulk insert of one or more files from a 
+        designated folder
+        
+        Requirements:
+        package pymssql
+        package pandas
+        
+        Inputs:
+        m_string_table
+        Type: string
+        Desc: the name of the table to insert files
+        
+        m_string_path
+        Type: string
+        Desc: path to file directory
+
+        m_var_files
+        Type: string or iterator
+        Desc: multiple options to insert one, multiple or all files in a directory
+            'all' -> insert all files from the directory
+            'file_name.csv' -> inserts only one file from the directory
+            ['file_name_00.csv', 'file_name_01.csv', ..] -> inserts only the files in
+                the list
+            
+        Important Info:
+        None
+        
+        Return:
+        object
+        Type: list
+        Desc: this of the clusters that meet the evaluation criterea
+        list[0] -> type: boolean; flag if bulk insert executed correctly
+        list[1] -> type: string; error message if list[0] is False or empty
+                string if list[0] is True
+        '''
+
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # lists declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # sub-section comment
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # sectional comment
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # variable / object cleanup
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return list_return
