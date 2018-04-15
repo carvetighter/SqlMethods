@@ -2092,12 +2092,19 @@ class SqlMethods(object):
         # False because all the files passed are not in the directory
         #--------------------------------------------------------------------------#
 
+        # all the files in the folder
         if m_var_files == 'all':
-            bool_files = True
+            set_files = self._get_files(m_string_path)
+            if len(set_files) > 0:
+                bool_files = True
+        
+        # only one file
         elif isinstance(m_var_files, str):
             set_files = self._get_files(m_string_path)
             if m_var_files in set_files:
                 bool_files = True
+        
+        # multiple files but not all files in folder
         elif isinstance(m_var_files, collections.Sequence) and not 
                 isinstance(m_var_files, str):
             set_files = self._get_files(m_string_path)
@@ -2108,6 +2115,24 @@ class SqlMethods(object):
                     bool_files = False
                     break
         else:
+            string_ve = 'variable or object passed for is not one of three'
+            string_ve += " options 'all', '<file_name.csv>',  or a list or tuple"
+            string_ve += ' with strings for file names.'
+            raise ValueError(string_ve)
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # begin the bulk insert process
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$# 
+
+        #--------------------------------------------------------------------------#
+        # variable / object cleanup
+        #--------------------------------------------------------------------------#
+
+        if bool_files and self._list_conn[0]:
             pass
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
