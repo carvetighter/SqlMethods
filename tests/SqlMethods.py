@@ -2143,7 +2143,8 @@ class SqlMethods(object):
             # delete table if exists
             #--------------------------------------------------------------------------#
 
-            df_meta_files = self._bi_meta_files(string_f_option, set_files)
+            df_meta_files = self._bi_meta_files(string_f_option, m_string_path,
+                                        set_files)
 
             #--------------------------------------------------------------------------#
             # delete table if exists
@@ -2184,7 +2185,7 @@ class SqlMethods(object):
 
         return list_return
     
-    def _bi_meta_files(m_string_file_flag, m_set_files):
+    def _bi_meta_files(m_string_file_flag, m_string_path, m_set_files):
     '''
     this method gathers meta data on the designated files; the data gathered
     is the file name, length (number of lines), max string length of column, column
@@ -2192,11 +2193,16 @@ class SqlMethods(object):
     
     Requirements:
     package pandas
+    package os
     
     Inputs:
     m_string_file_flag
     Type: string
     Desc: the flag to determine how to get the metadata from each file
+
+    m_string_path
+    Type: string
+    Desc: path to the file directory
     
     m_set_files
     Type: set
@@ -2233,6 +2239,9 @@ class SqlMethods(object):
     # lists declarations
     #--------------------------------------------------------------------------#
 
+    list_meta_00 = list()
+    list_meta_col = list()
+
     #--------------------------------------------------------------------------#
     # variables declarations
     #--------------------------------------------------------------------------#
@@ -2246,8 +2255,48 @@ class SqlMethods(object):
     #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
 
     #--------------------------------------------------------------------------#
-    # sub-section comment
+    # all files
     #--------------------------------------------------------------------------#
+    if m_string_file_flag == 'all':
+        for string_file in m_set_files:
+            # create DataFrame
+            string_file_path = os.path.join(m_string_path, string_file)
+            # ?? check to see if you can read file where all columngs are strings
+            df_temp = pandas.read_csv(string_file_path)
+            
+            # get column names
+            list_meta_col.append(df_temp.columns)
+
+            # file meta
+            int_length = len(df_temp)
+            int_str_max = 0
+            for string_col in df_temp:
+                int_temp_str_max = df_temp[string_col].str.len.max()
+                if int_temp_str_max > int_str_max:
+                    int_str_max = int_temp_str_max
+            
+            # add information to list
+            list_meta_00.append([string_file, int_length, int_str_max])
+
+            # clean-up
+            del df_temp, string_file_path, int_length, int_str_max
+            del int_temp_str_max, string_col
+        
+        # ??
+    
+    #--------------------------------------------------------------------------#
+    #  one file
+    #--------------------------------------------------------------------------#
+    elif m_string_file_flag == 'one':
+        pass
+    
+    #--------------------------------------------------------------------------#
+    # multiple files
+    #--------------------------------------------------------------------------#
+    elif m_string_file_flag = 'multiple':
+        pass
+    else:
+        pass
 
     #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
     #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
