@@ -2096,7 +2096,12 @@ class SqlMethods(object):
         if m_var_files == 'all':
             set_files = self._get_files(m_string_path)
             if len(set_files) > 0:
-                bool_files = True
+                for string_file in set_files:
+                    if string_temp_file[-3] == 'csv':
+                        bool_files = True
+                    else:
+                        bool_files = False
+                        break
         
         # only one file
         elif isinstance(m_var_files, str):
