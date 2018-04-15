@@ -2085,10 +2085,13 @@ class SqlMethods(object):
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
 
         #--------------------------------------------------------------------------#
-        # test to begin process
+        # file test to begin process
+        #
+        # question here whether to put all the files found in a list
+        # from a list of files to insert into the db or just to return 
+        # False because all the files passed are not in the directory
         #--------------------------------------------------------------------------#
 
-        # file test
         if m_var_files == 'all':
             bool_files = True
         elif isinstance(m_var_files, str):
