@@ -8,6 +8,8 @@
 
 import pymssql
 import collections
+import pandas
+import os
 from xml.dom import minidom
 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -281,7 +283,7 @@ class SqlMethods(object):
 
         return list_return
 
-    def _get_files(m_string_path):
+    def _get_files(self, m_string_path):
         '''
         this method returns a set of files in the directory of csv files
         
@@ -2021,7 +2023,7 @@ class SqlMethods(object):
         return [bool_alter_table, string_error]
 
     def bulk_insert(self, m_string_table, m_string_path, m_var_files = 'all'):
-         '''
+        '''
         this method impliments the bulk insert of one or more files from a 
         designated folder
         
@@ -2100,7 +2102,7 @@ class SqlMethods(object):
             set_files = self._get_files(m_string_path)
             if len(set_files) > 0:
                 for string_file in set_files:
-                    if string_temp_file[-3] == 'csv':
+                    if string_file[-3] == 'csv':
                         bool_files = True
                     else:
                         bool_files = False
@@ -2114,7 +2116,7 @@ class SqlMethods(object):
                 bool_files = True
                 
         # multiple files but not all files in folder
-        elif isinstance(m_var_files, collections.Sequence) and not 
+        elif isinstance(m_var_files, collections.Sequence) and not \
                 isinstance(m_var_files, str):
             string_f_option = 'multiple'
             set_files = self._get_files(m_string_path)
@@ -2153,7 +2155,6 @@ class SqlMethods(object):
             if self.table_exists(m_string_table):
                 bool_dt_process = self.delete_table(m_string_table)
 
-            
         elif not bool_files:
             string_bf = 'the files option passed to m_var_files did not validate'
             string_bf += ', check the option and the files in designated folder'
@@ -2185,133 +2186,134 @@ class SqlMethods(object):
 
         return list_return
     
-    def _bi_meta_files(m_string_file_flag, m_string_path, m_set_files):
-    '''
-    this method gathers meta data on the designated files; the data gathered
-    is the file name, length (number of lines), max string length of column, column
-    names
-    
-    Requirements:
-    package pandas
-    package os
-    
-    Inputs:
-    m_string_file_flag
-    Type: string
-    Desc: the flag to determine how to get the metadata from each file
-
-    m_string_path
-    Type: string
-    Desc: path to the file directory
-    
-    m_set_files
-    Type: set
-    Desc: strings which represent the files in the target directory
-
-    Important Info:
-    None
-    
-    Return:
-    object
-    Type: pandas DataFrame
-    Desc: metadata on files
-    string_file -> type: string; name of file
-    int_length -> type: int; the length of each file, number of records 
-                        (excludes header)
-    int_max_string -> type: int; max length of an element in all columns when
-                        converted to a string; there should only be on per file
-    string_col_00 -> type: string; the name of the first column of file;
-                        this will vary depending on the number of columns which will be
-                        the file with the most columns; string_col_01, string_col_02, 
-                        string_col_03, etc...; for files that have less columns None will
-                        be in the DataFrame column for that file
-    '''
-
-    #--------------------------------------------------------------------------#
-    # objects declarations
-    #--------------------------------------------------------------------------#
-
-    #--------------------------------------------------------------------------#
-    # time declarations
-    #--------------------------------------------------------------------------#
-
-    #--------------------------------------------------------------------------#
-    # lists declarations
-    #--------------------------------------------------------------------------#
-
-    list_meta_00 = list()
-    list_meta_col = list()
-
-    #--------------------------------------------------------------------------#
-    # variables declarations
-    #--------------------------------------------------------------------------#
-
-    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-    #
-    # Start
-    #
-    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
-
-    #--------------------------------------------------------------------------#
-    # all files
-    #--------------------------------------------------------------------------#
-    if m_string_file_flag == 'all':
-        for string_file in m_set_files:
-            # create DataFrame
-            string_file_path = os.path.join(m_string_path, string_file)
-            # ?? check to see if you can read file where all columngs are strings
-            df_temp = pandas.read_csv(string_file_path)
-            
-            # get column names
-            list_meta_col.append(df_temp.columns)
-
-            # file meta
-            int_length = len(df_temp)
-            int_str_max = 0
-            for string_col in df_temp:
-                int_temp_str_max = df_temp[string_col].str.len.max()
-                if int_temp_str_max > int_str_max:
-                    int_str_max = int_temp_str_max
-            
-            # add information to list
-            list_meta_00.append([string_file, int_length, int_str_max])
-
-            # clean-up
-            del df_temp, string_file_path, int_length, int_str_max
-            del int_temp_str_max, string_col
+    def _bi_meta_files(self, m_string_file_flag, m_string_path, m_set_files):
+        '''
+        this method gathers meta data on the designated files; the data gathered
+        is the file name, length (number of lines), max string length of column, column
+        names
         
-        # ??
-    
-    #--------------------------------------------------------------------------#
-    #  one file
-    #--------------------------------------------------------------------------#
-    elif m_string_file_flag == 'one':
-        pass
-    
-    #--------------------------------------------------------------------------#
-    # multiple files
-    #--------------------------------------------------------------------------#
-    elif m_string_file_flag = 'multiple':
-        pass
-    else:
-        pass
+        Requirements:
+        package pandas
+        package os
+        
+        Inputs:
+        m_string_file_flag
+        Type: string
+        Desc: the flag to determine how to get the metadata from each file
 
-    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-    #
-    # sectional comment
-    #
-    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-    #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+        m_string_path
+        Type: string
+        Desc: path to the file directory
+        
+        m_set_files
+        Type: set
+        Desc: strings which represent the files in the target directory
 
-    #--------------------------------------------------------------------------#
-    # variable / object cleanup
-    #--------------------------------------------------------------------------#
+        Important Info:
+        None
+        
+        Return:
+        object
+        Type: pandas DataFrame
+        Desc: metadata on files
+        string_file -> type: string; name of file
+        int_length -> type: int; the length of each file, number of records 
+                            (excludes header)
+        int_max_string -> type: int; max length of an element in all columns when
+                            converted to a string; there should only be on per file
+        string_col_00 -> type: string; the name of the first column of file;
+                            this will vary depending on the number of columns which will be
+                            the file with the most columns; string_col_01, string_col_02, 
+                            string_col_03, etc...; for files that have less columns None will
+                            be in the DataFrame column for that file
+        '''
 
-    #--------------------------------------------------------------------------#
-    # return value
-    #--------------------------------------------------------------------------#
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
 
-    return list_return
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # lists declarations
+        #--------------------------------------------------------------------------#
+
+        list_meta_00 = list()
+        list_meta_col = list()
+        list_return = list()
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # all files
+        #--------------------------------------------------------------------------#
+        if m_string_file_flag == 'all':
+            for string_file in m_set_files:
+                # create DataFrame
+                string_file_path = os.path.join(m_string_path, string_file)
+                # ?? check to see if you can read file where all columngs are strings
+                df_temp = pandas.read_csv(string_file_path)
+                
+                # get column names
+                list_meta_col.append(df_temp.columns)
+
+                # file meta
+                int_length = len(df_temp)
+                int_str_max = 0
+                for string_col in df_temp:
+                    int_temp_str_max = df_temp[string_col].str.len.max()
+                    if int_temp_str_max > int_str_max:
+                        int_str_max = int_temp_str_max
+                
+                # add information to list
+                list_meta_00.append([string_file, int_length, int_str_max])
+
+                # clean-up
+                del df_temp, string_file_path, int_length, int_str_max
+                del int_temp_str_max, string_col
+            
+            # ??
+        
+        #--------------------------------------------------------------------------#
+        #  one file
+        #--------------------------------------------------------------------------#
+        elif m_string_file_flag == 'one':
+            pass
+        
+        #--------------------------------------------------------------------------#
+        # multiple files
+        #--------------------------------------------------------------------------#
+        elif m_string_file_flag == 'multiple':
+            pass
+        else:
+            pass
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # sectional comment
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # variable / object cleanup
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return list_return
