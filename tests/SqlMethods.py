@@ -2021,7 +2021,7 @@ class SqlMethods(object):
         return [bool_alter_table, string_error]
 
     def bulk_insert(self, m_string_table, m_string_path, m_var_files = 'all'):
-         '''
+        '''
         this method impliments the bulk insert of one or more files from a 
         designated folder
         
@@ -2124,6 +2124,8 @@ class SqlMethods(object):
                 else:
                     bool_files = False
                     break
+        
+        # error out
         else:
             string_ve = 'variable or object passed for is not one of three'
             string_ve += " options 'all', '<file_name.csv>',  or a list or tuple"
@@ -2153,7 +2155,6 @@ class SqlMethods(object):
             if self.table_exists(m_string_table):
                 bool_dt_process = self.delete_table(m_string_table)
 
-            
         elif not bool_files:
             string_bf = 'the files option passed to m_var_files did not validate'
             string_bf += ', check the option and the files in designated folder'
