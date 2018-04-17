@@ -173,8 +173,11 @@ def main(list_args = []):
 
     string_sql_table = 'dbo.insert_bulk'
     string_path = os.path.abspath(__file__)
-    string_path = os.path.join(string_path, 'file_to_insert')
-
+    string_file = string_path.split(os.sep)[-1]
+    string_path  = string_path.split(string_file)[0]
+    string_path = os.path.join(string_path, 'files_to_insert')
+    del string_file
+    
     #--------------------------------------------------------------------------#
     # db connections
     #--------------------------------------------------------------------------#

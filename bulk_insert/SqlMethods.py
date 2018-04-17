@@ -2102,7 +2102,7 @@ class SqlMethods(object):
             set_files = self._get_files(m_string_path)
             if len(set_files) > 0:
                 for string_file in set_files:
-                    if string_file[-3] == 'csv':
+                    if string_file[-3:] == 'csv':
                         bool_files = True
                     else:
                         bool_files = False
