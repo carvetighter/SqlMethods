@@ -117,7 +117,8 @@ def def_Methods(list_cluster_results, array_sparse_matrix):
     # return value
     #--------------------------------------------------------------------------#
 
-    return list_return
+    #return list_return
+    pass
 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -173,10 +174,10 @@ def main(list_args = []):
 
     string_sql_table = 'dbo.insert_bulk'
     string_path = os.path.abspath(__file__)
-    string_file = string_path.split(os.sep)[-1]
-    string_path  = string_path.split(string_file)[0]
+    list_path = string_path.split(os.sep)[:-1]
+    string_path = str(os.sep).join(list_path)
     string_path = os.path.join(string_path, 'files_to_insert')
-    del string_file
+    del list_path
     
     #--------------------------------------------------------------------------#
     # db connections
