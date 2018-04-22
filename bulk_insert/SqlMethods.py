@@ -2089,6 +2089,7 @@ class SqlMethods(object):
 
         bool_files = False
         bool_dt_process = True
+        bool_create_table = False
         string_f_option = 'all'
         string_sql_bi = 'bulk insert '
         string_sql_from = " from '"
@@ -2187,56 +2188,61 @@ class SqlMethods(object):
             # begin bulk insert process
             #--------------------------------------------------------------------------#      
 
-            for string_file in m_var_files:
-                # create variables
-                string_sql_bulk_insert = string_sql_bi + m_string_table
-                string_path_temp = os.path.join(m_string_path, string_file)
-                string_sql_bulk_insert += string_sql_from + string_path_temp + "'"
-                string_sql_bulk_insert += string_sql_with
-                bool_bi_insert = True
-                string_sql_error = ''
+            if bool_create_table:
+                for string_file in m_var_files:
+                    # create variables
+                    string_sql_bulk_insert = string_sql_bi + m_string_table
+                    string_path_temp = os.path.join(m_string_path, string_file)
+                    string_sql_bulk_insert += string_sql_from + string_path_temp + "'"
+                    string_sql_bulk_insert += string_sql_with
+                    bool_bi_insert = True
+                    string_sql_error = ''
 
-                # create cursor
-                sql_cursor = self._list_conn[1].cursor()
+                    # create cursor
+                    sql_cursor = self._list_conn[1].cursor()
 
-                # bulk insert
-                try:
-                    sql_cursor.execute(string_sql_bulk_insert)
-                except pymssql.OperationalError as oe:
-                    string_sql_error += 'Operational error was raised' + str(oe.args)
-                    bool_bi_insert = False
-                except pymssql.ProgrammingError as pe:
-                    string_sql_error += 'A program error was raised|' + str(pe.args)
-                    bool_bi_insert = False
-                except pymssql.DatabaseError as dbe:
-                    string_sql_error += 'Database error raised|' + str(dbe.args)
-                    bool_bi_insert = False
-                except pymssql.DataError as de:
-                    string_sql_error += 'Data error raised|' + str(de.args)
-                    bool_bi_insert = False
-                except pymssql.IntegrityError as inte:
-                    string_sql_error += 'Integrity error raised|' + str(inte.args)
-                    bool_bi_insert = False
-                except pymssql.InterfaceError as ife:
-                    string_sql_error += 'Interface error raised|' + str(ife.args)
-                    bool_bi_insert = False
-                except pymssql.InternalError as ie:
-                    string_sql_error += 'Internal error raised|' + str(ie.args)
-                    bool_bi_insert = False
-                except pymssql.NotSupportedError as nse:
-                    string_sql_error += 'Not supported error raised|' + str(nse.args)
-                    bool_bi_insert = False
-                except pymssql.StandardError as se:
-                    string_sql_error += 'Standard error raised|' + str(se.args)
-                    bool_bi_insert = False
-                except pymssql.Error as e:
-                    string_sql_error += 'General error raised|' + str(e.args)
-                    bool_bi_insert = False
-                else:
-                    pass
-                finally:
-                    list_commit.append(self._commit())
-                    list_return.append([bool_bi_insert, string_sql_error])
+                    # bulk insert
+                    try:
+                        sql_cursor.execute(string_sql_bulk_insert)
+                    except pymssql.OperationalError as oe:
+                        string_sql_error += 'Operational error was raised' + str(oe.args)
+                        bool_bi_insert = False
+                    except pymssql.ProgrammingError as pe:
+                        string_sql_error += 'A program error was raised|' + str(pe.args)
+                        bool_bi_insert = False
+                    except pymssql.DatabaseError as dbe:
+                        string_sql_error += 'Database error raised|' + str(dbe.args)
+                        bool_bi_insert = False
+                    except pymssql.DataError as de:
+                        string_sql_error += 'Data error raised|' + str(de.args)
+                        bool_bi_insert = False
+                    except pymssql.IntegrityError as inte:
+                        string_sql_error += 'Integrity error raised|' + str(inte.args)
+                        bool_bi_insert = False
+                    except pymssql.InterfaceError as ife:
+                        string_sql_error += 'Interface error raised|' + str(ife.args)
+                        bool_bi_insert = False
+                    except pymssql.InternalError as ie:
+                        string_sql_error += 'Internal error raised|' + str(ie.args)
+                        bool_bi_insert = False
+                    except pymssql.NotSupportedError as nse:
+                        string_sql_error += 'Not supported error raised|' + str(nse.args)
+                        bool_bi_insert = False
+                    except pymssql.StandardError as se:
+                        string_sql_error += 'Standard error raised|' + str(se.args)
+                        bool_bi_insert = False
+                    except pymssql.Error as e:
+                        string_sql_error += 'General error raised|' + str(e.args)
+                        bool_bi_insert = False
+                    else:
+                        pass
+                    finally:
+                        list_commit.append(self._commit())
+                        list_return.append([bool_bi_insert, string_sql_error])
+            else:
+                string_nc = 'error in creating table in database'
+                list_return = [[False, string_nc]]
+                list_commit = [[None, '']]
 
         # did not pass file validation
         elif not bool_files:
