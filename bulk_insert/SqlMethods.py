@@ -2074,12 +2074,18 @@ class SqlMethods(object):
         # lists declarations
         #--------------------------------------------------------------------------#
 
+        list_columns = list()
+
         #--------------------------------------------------------------------------#
         # variables declarations
         #--------------------------------------------------------------------------#
 
         bool_files = False
+        bool_dt_process = True
         string_f_option = 'all'
+        string_sql_bi = 'bulk insert '
+        string_sql_from = ' from ' + m_string_path
+        string_sql_with = " with (format = 'CSV')"
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -2099,14 +2105,19 @@ class SqlMethods(object):
 
         # all the files in the folder
         if m_var_files == 'all':
+            string_f_option = 'all'
             set_files = self._get_files(m_string_path)
+            
             if len(set_files) > 0:
+                bool_files = True
                 for string_file in set_files:
-                    if string_file[-3:] == 'csv':
-                        bool_files = True
-                    else:
+                    if string_file[-3:] != 'csv':
                         bool_files = False
                         break
+            
+            m_var_files = list()
+            for string_file in set_files:    
+                m_var_files.append(string_file)
         
         # only one file
         elif isinstance(m_var_files, str):
@@ -2126,6 +2137,8 @@ class SqlMethods(object):
                 else:
                     bool_files = False
                     break
+        
+        # catch all
         else:
             string_ve = 'variable or object passed for is not one of three'
             string_ve += " options 'all', '<file_name.csv>',  or a list or tuple"
@@ -2142,18 +2155,33 @@ class SqlMethods(object):
 
         if bool_files and self._list_conn[0]:
             #--------------------------------------------------------------------------#
-            # delete table if exists
+            # column to create table by file with max length length of
+            # value in column as a string
             #--------------------------------------------------------------------------#
 
-            df_meta_files = self._bi_meta_files(string_f_option, m_string_path,
+            dict_meta_files = self._bi_meta_files(string_f_option, m_string_path,
                                         set_files)
 
             #--------------------------------------------------------------------------#
-            # delete table if exists
+            # delete table if exists; create table
             #--------------------------------------------------------------------------#
 
             if self.table_exists(m_string_table):
                 bool_dt_process = self.delete_table(m_string_table)
+
+            for string_file in dict_meta_files:
+                dict_columns = dict_meta_files[string_file]
+                for string_column in dict_columns:
+                    list_columns.append(string_column + ' varchar(' + dict_columns[string_column] + ')')
+            
+            if bool_dt_process:
+                bool_create_table = self.create_table(m_string_table, list_columns)
+            
+            #--------------------------------------------------------------------------#
+            # begin bulk insert process
+            #--------------------------------------------------------------------------#      
+
+            for string_file in m_var_files      
 
         elif not bool_files:
             string_bf = 'the files option passed to m_var_files did not validate'
@@ -2214,18 +2242,12 @@ class SqlMethods(object):
         
         Return:
         object
-        Type: pandas DataFrame
-        Desc: metadata on files
-        string_file -> type: string; name of file
-        int_length -> type: int; the length of each file, number of records 
-                            (excludes header)
-        int_max_string -> type: int; max length of an element in all columns when
-                            converted to a string; there should only be on per file
-        string_col_00 -> type: string; the name of the first column of file;
-                            this will vary depending on the number of columns which will be
-                            the file with the most columns; string_col_01, string_col_02, 
-                            string_col_03, etc...; for files that have less columns None will
-                            be in the DataFrame column for that file
+        Type: dictionary
+        Desc: files and columns to create the table with the max length of each
+            key -> type: string; file name
+            value -> dictionary; each column of a file that is unique
+                            key -> type: string; column name of file
+                            value -> integer; the max length of the column
         '''
 
         #--------------------------------------------------------------------------#
@@ -2240,9 +2262,8 @@ class SqlMethods(object):
         # lists declarations
         #--------------------------------------------------------------------------#
 
-        list_meta_00 = list()
-        list_meta_col = list()
-        list_return = list()
+        set_table_columns = set()
+        dict_return = dict()
 
         #--------------------------------------------------------------------------#
         # variables declarations
@@ -2259,44 +2280,45 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
         # all files
         #--------------------------------------------------------------------------#
+
         if m_string_file_flag == 'all':
             for string_file in m_set_files:
                 # create DataFrame
                 string_file_path = os.path.join(m_string_path, string_file)
-                # ?? check to see if you can read file where all columngs are strings
-                df_temp = pandas.read_csv(string_file_path)
+                df_temp = pandas.read_csv(string_file_path, dtype = str)
                 
                 # get column names
-                list_meta_col.append(df_temp.columns)
-
-                # file meta
-                int_length = len(df_temp)
-                int_str_max = 0
+                dict_file_col_info = dict()
                 for string_col in df_temp:
-                    int_temp_str_max = df_temp[string_col].str.len.max()
-                    if int_temp_str_max > int_str_max:
-                        int_str_max = int_temp_str_max
+                    if string_col not in set_table_columns:
+                        dict_file_col_info[string_col] = df_temp[string_col].str.len().max()
+                        set_table_columns.add(string_col)
                 
-                # add information to list
-                list_meta_00.append([string_file, int_length, int_str_max])
+                # add file column info to dictionary
+                dict_return[string_file] = dict_file_col_info
 
                 # clean-up
-                del df_temp, string_file_path, int_length, int_str_max
-                del int_temp_str_max, string_col
-            
-            # ??
+                del df_temp, string_file_path, dict_file_col_info
+                del string_col
         
         #--------------------------------------------------------------------------#
         #  one file
         #--------------------------------------------------------------------------#
+
         elif m_string_file_flag == 'one':
             pass
         
         #--------------------------------------------------------------------------#
         # multiple files
         #--------------------------------------------------------------------------#
+
         elif m_string_file_flag == 'multiple':
             pass
+                
+        #--------------------------------------------------------------------------#
+        # all else
+        #--------------------------------------------------------------------------#
+        
         else:
             pass
 
@@ -2316,4 +2338,4 @@ class SqlMethods(object):
         # return value
         #--------------------------------------------------------------------------#
 
-        return list_return
+        return dict_return
