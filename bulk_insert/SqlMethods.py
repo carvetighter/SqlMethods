@@ -643,14 +643,14 @@ class SqlMethods(object):
             try:
                 sql_cursor_col.execute(str_query_col)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # get the columns from the cursor
                 list_raw_col = sql_cursor_col.fetchall()
@@ -666,7 +666,7 @@ class SqlMethods(object):
                 if bool_columns == True:
                     list_return.append(list_columns)
                 else:
-                    list_reutrn.append(str_sql_error)
+                    list_reutrn.append(string_sql_error)
 
             # close cursor
             sql_cursor_col.close()
@@ -678,14 +678,14 @@ class SqlMethods(object):
             try:
                 sql_cursor_dt.execute(str_query_dt)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # get the columns from the cursor
                 list_raw_dt = sql_cursor_dt.fetchall()
@@ -706,7 +706,7 @@ class SqlMethods(object):
                     list_return.append(list_py_data_type)
                     list_return.append(list_sql_data_type)
                 else:
-                    list_return.append(str_sql_error)
+                    list_return.append(string_sql_error)
                     list_return.append('')
 
             # close cursor
@@ -719,14 +719,14 @@ class SqlMethods(object):
             try:
                 sql_cursor_sql_dec_01.execute(str_query_sys_table_obj_id)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # get the columns from the cursor
                 list_raw_dec_01 = sql_cursor_sql_dec_01.fetchall()
@@ -754,11 +754,11 @@ class SqlMethods(object):
                 try:
                     sql_cursor_sql_dec_02.execute(string_col_name_max_len)
                 except pymssql.OperationalError:
-                    str_sql_error = 'Operational error was raised'
+                    string_sql_error = 'Operational error was raised'
                 except pymssql.ProgrammingError:
-                    str_sql_error = 'A program error was raised.'
+                    string_sql_error = 'A program error was raised.'
                 except pymssql.Error:
-                    str_sql_error = 'General error raised.'
+                    string_sql_error = 'General error raised.'
                 else:
                     # get the columns from the cursor
                     list_raw_dec_02 = sql_cursor_sql_dec_02.fetchall()
@@ -916,7 +916,7 @@ class SqlMethods(object):
 
         str_query = 'DROP TABLE ' + m_table_name
         bool_deleted = False
-        str_sql_error = ''
+        string_sql_error = ''
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -934,14 +934,14 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(str_query)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error = str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error = str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 bool_deleted = True
                 list_commit = self._commit()
@@ -984,7 +984,7 @@ class SqlMethods(object):
 
         str_query = r'TRUNCATE TABLE ' + m_string_table
         bool_truncate_table = False
-        str_sql_error = ''
+        string_sql_error = ''
                 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -1002,14 +1002,14 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(str_query)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 bool_truncate_table = True
                 list_commit = self._commit()
@@ -1074,14 +1074,14 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(m_string_sql_query)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # get the columns from the cursor
                 list_raw = sql_cursor.fetchall()
@@ -1106,7 +1106,7 @@ class SqlMethods(object):
         if bool_query == True:
             list_return.append(list_results)
         else:
-            list_return.append(str_sql_error)
+            list_return.append(string_sql_error)
         return list_return
 
     def insert(self, m_string_table, m_list_columns, m_list_values):
@@ -1166,14 +1166,14 @@ class SqlMethods(object):
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         
-        str_sql_error = ''
+        string_sql_error = ''
         string_data_type = ''
         str_sql_insert = 'INSERT INTO ' + m_string_table 
         str_sql_columns = self._build_column_string(m_list_columns, True)
 
-        bool_insert_into_table = False
+        bool_bi_insert = False
         int_segement_limit = 100000
-        str_sql_error = 'no sql connection'
+        string_sql_error = 'no sql connection'
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -1220,8 +1220,8 @@ class SqlMethods(object):
             #------------------------------------------------------------------------------------------------------------------------------------------------------#    
             
             int_segments = int(len(list_insert_many) / int_segement_limit)
-            bool_insert_into_table = True
-            str_sql_error = ''
+            bool_bi_insert = True
+            string_sql_error = ''
 
             #------------------------------------------------------------------------------------------------------------------------------------------------------#    
             # loop to insert values in list of tuples
@@ -1246,40 +1246,40 @@ class SqlMethods(object):
                 try:
                     sql_cursor.executemany(str_sql_statement, list_insert)
                 except pymssql.OperationalError as oe:
-                    str_sql_error += ';Operational error was raised' + str(oe.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Operational error was raised' + str(oe.args)
+                    bool_bi_insert = False
                 except pymssql.ProgrammingError as pe:
-                    str_sql_error += ';A program error was raised|' + str(pe.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';A program error was raised|' + str(pe.args)
+                    bool_bi_insert = False
                 except pymssql.DatabaseError as dbe:
-                    str_sql_error += ';Database error raised|' + str(dbe.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Database error raised|' + str(dbe.args)
+                    bool_bi_insert = False
                 except pymssql.DataError as de:
-                    str_sql_error += ';Data error raised|' + str(de.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Data error raised|' + str(de.args)
+                    bool_bi_insert = False
                 except pymssql.IntegrityError as inte:
-                    str_sql_error += ';Integrity error raised|' + str(inte.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Integrity error raised|' + str(inte.args)
+                    bool_bi_insert = False
                 except pymssql.InterfaceError as ife:
-                    str_sql_error += ';Interface error raised|' + str(ife.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Interface error raised|' + str(ife.args)
+                    bool_bi_insert = False
                 except pymssql.InternalError as ie:
-                    str_sql_error += ';Internal error raised|' + str(ie.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Internal error raised|' + str(ie.args)
+                    bool_bi_insert = False
                 except pymssql.NotSupportedError as nse:
-                    str_sql_error += ';Not supported error raised|' + str(nse.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Not supported error raised|' + str(nse.args)
+                    bool_bi_insert = False
                 except pymssql.StandardError as se:
-                    str_sql_error += ';Standard error raised|' + str(se.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Standard error raised|' + str(se.args)
+                    bool_bi_insert = False
                 except pymssql.Error as e:
-                    str_sql_error += ';General error raised|' + str(e.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';General error raised|' + str(e.args)
+                    bool_bi_insert = False
                 else:
                     list_commit = self._commit()
                     if not list_commit[0]:
-                        str_sql_error += list_commit[1]
-                        bool_insert_into_table = False
+                        string_sql_error += list_commit[1]
+                        bool_bi_insert = False
                 finally:
                     pass
 
@@ -1290,8 +1290,8 @@ class SqlMethods(object):
         # append return list
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-        list_return.append(bool_insert_into_table)
-        list_return.append(str_sql_error)
+        list_return.append(bool_bi_insert)
+        list_return.append(string_sql_error)
         return list_return
 
     def create_table(self, m_string_table, m_list_columns, m_bool_wide_table = False, m_bool_compression = True):
@@ -1354,7 +1354,7 @@ class SqlMethods(object):
 
         str_create = 'CREATE TABLE ' + m_string_table + '('
         bool_created = False
-        str_sql_error = 'no sql connection'
+        string_sql_error = 'no sql connection'
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -1367,7 +1367,7 @@ class SqlMethods(object):
         if self._list_conn[0] == True:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
-            str_sql_error = ''
+            string_sql_error = ''
 
             #------------------------------------------------------------------------------------------------------------------------------------------------------# 
             # create sql statement
@@ -1399,14 +1399,14 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(str_create)
             except pymssql.OperationalError as e:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(e.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 bool_created = True
                 list_commit = self._commit()
@@ -1421,7 +1421,7 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
         list_return.append(bool_created)
-        list_return.append(str_sql_error)
+        list_return.append(string_sql_error)
         return list_return
 
     def update(self, m_table_name, m_list_columns, m_list_values, m_string_where = ''):
@@ -1628,9 +1628,9 @@ class SqlMethods(object):
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         
-        str_sql_error = 'no sql connection'
+        string_sql_error = 'no sql connection'
         str_sql_delete_records = 'DELETE FROM ' + m_table_name + ' WHERE '
-        bool_insert_into_table = False
+        bool_bi_insert = False
         
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -1643,7 +1643,7 @@ class SqlMethods(object):
         if self._list_conn[0] == True:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
-            str_sql_error = ''
+            string_sql_error = ''
 
             # add where clauses to sql statement
             for string_w in m_list_where:
@@ -1653,37 +1653,37 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(str_sql_delete_records)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             except pymssql.DatabaseError as dbe:
-                str_sql_error = 'Database error raised|'
-                str_sql_error += str(dbe.args)
+                string_sql_error = 'Database error raised|'
+                string_sql_error += str(dbe.args)
             except pymssql.DataError as de:
-                str_sql_error = 'Data error raised|'
-                str_sql_error += str(de.args)
+                string_sql_error = 'Data error raised|'
+                string_sql_error += str(de.args)
             except pymssql.IntegrityError as inte:
-                str_sql_error = 'Integrity error raised|'
-                str_sql_error += str(inte.args)
+                string_sql_error = 'Integrity error raised|'
+                string_sql_error += str(inte.args)
             except pymssql.InterfaceError as ife:
-                str_sql_error = 'Interface error raised|'
-                str_sql_error += str(ife.args)
+                string_sql_error = 'Interface error raised|'
+                string_sql_error += str(ife.args)
             except pymssql.InternalError as ie:
-                str_sql_error = 'Internal error raised|'
-                str_sql_error += str(ie.args)
+                string_sql_error = 'Internal error raised|'
+                string_sql_error += str(ie.args)
             except pymssql.NotSupportedError as nse:
-                str_sql_error = 'Not supported error raised|'
-                str_sql_error += str(nse.args)
+                string_sql_error = 'Not supported error raised|'
+                string_sql_error += str(nse.args)
             except pymssql.StandardError as se:
-                str_sql_error = 'Standard error raised|'
-                str_sql_error += str(se.args)
+                string_sql_error = 'Standard error raised|'
+                string_sql_error += str(se.args)
             else:
-                bool_insert_into_table = True
+                bool_bi_insert = True
                 list_commit = self._commit()
             finally:
                 pass
@@ -1695,8 +1695,8 @@ class SqlMethods(object):
         # return value
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-        list_return.append(bool_insert_into_table)
-        list_return.append(str_sql_error)
+        list_return.append(bool_bi_insert)
+        list_return.append(string_sql_error)
         return list_return
 
     def get_wide_columns(self, m_string_table):
@@ -1830,7 +1830,7 @@ class SqlMethods(object):
                                                                                  m_string_end = ') select 1 else select 0')
         bool_num_col = False
         bool_table_wide = False
-        str_sql_error = 'no sql connection'
+        string_sql_error = 'no sql connection'
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -1841,12 +1841,12 @@ class SqlMethods(object):
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#       
 
         # return list if no connection
-        list_return = [bool_num_col, str_sql_error]
+        list_return = [bool_num_col, string_sql_error]
 
         if self._list_conn[0] == True:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
-            str_sql_error = ''
+            string_sql_error = ''
 
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # testing for narrow table
@@ -1856,14 +1856,14 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(str_query_num_col)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # get the number of columns
                 int_return = sql_cursor.fetchone()[0]
@@ -1883,14 +1883,14 @@ class SqlMethods(object):
             try:
                 sql_cursor_wide.execute(str_query_wide)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # set boolean
                 bool_table_wide = True
@@ -1904,7 +1904,7 @@ class SqlMethods(object):
             if bool_num_col == True:
                 list_return.append(int_return)
             else:
-                list_reutrn.append(str_sql_error)
+                list_reutrn.append(string_sql_error)
 
             # delete cursor
             sql_cursor_wide.close()
@@ -1999,14 +1999,14 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(string_sql)
             except pymssql.OperationalError as e:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(e.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 bool_alter_table = True
                 list_commit = self._commit()
@@ -2054,12 +2054,17 @@ class SqlMethods(object):
             the desired csv's are in the top level of the target directory
         
         Return:
-        object
-        Type: list
-        Desc: this of the clusters that meet the evaluation criterea
-        list[0] -> type: boolean; flag if bulk insert executed correctly
-        list[1] -> type: string; error message if list[0] is False or empty
-                string if list[0] is True
+        objects
+        Type: list, list
+        Desc: first list is the bulk insert results, second list is the commit results
+        list_00[x] -> type: list; 
+            x[0] -> type: boolean; bulk insert passed or failed
+            x[1] -> type: string; 
+        list_01[y] -> type: list; 
+            y[0] -> type: boolean; submit passed or failed, if None method did not
+                        get to that point
+            y[1] -> type: string; error in submit, if empty string method did not get
+                        to that point
         '''
 
         #--------------------------------------------------------------------------#
@@ -2075,6 +2080,8 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         list_columns = list()
+        list_commit = list()
+        list_return = list()
 
         #--------------------------------------------------------------------------#
         # variables declarations
@@ -2084,7 +2091,7 @@ class SqlMethods(object):
         bool_dt_process = True
         string_f_option = 'all'
         string_sql_bi = 'bulk insert '
-        string_sql_from = ' from ' + m_string_path
+        string_sql_from = " from '"
         string_sql_with = " with (format = 'CSV')"
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -2115,9 +2122,8 @@ class SqlMethods(object):
                         bool_files = False
                         break
             
-            m_var_files = list()
-            for string_file in set_files:    
-                m_var_files.append(string_file)
+            m_var_files = list() 
+            m_var_files.extend(set_files)
         
         # only one file
         elif isinstance(m_var_files, str):
@@ -2153,14 +2159,14 @@ class SqlMethods(object):
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$# 
 
-        if bool_files and self._list_conn[0]:
+        if bool_files and self.bool_is_connected:
             #--------------------------------------------------------------------------#
             # column to create table by file with max length length of
             # value in column as a string
             #--------------------------------------------------------------------------#
 
             dict_meta_files = self._bi_meta_files(string_f_option, m_string_path,
-                                        set_files)
+                                        set(m_var_files))
 
             #--------------------------------------------------------------------------#
             # delete table if exists; create table
@@ -2181,20 +2187,76 @@ class SqlMethods(object):
             # begin bulk insert process
             #--------------------------------------------------------------------------#      
 
-            for string_file in m_var_files      
+            for string_file in m_var_files:
+                # create variables
+                string_sql_bulk_insert = string_sql_bi + m_string_table
+                string_path_temp = os.path.join(m_string_path, string_file)
+                string_sql_bulk_insert += string_sql_from + string_path_temp + "'"
+                string_sql_bulk_insert += string_sql_with
+                bool_bi_insert = True
+                string_sql_error = ''
 
+                # create cursor
+                sql_cursor = self._list_conn[1].cursor()
+
+                # bulk insert
+                try:
+                    sql_cursor.execute(string_sql_bulk_insert)
+                except pymssql.OperationalError as oe:
+                    string_sql_error += 'Operational error was raised' + str(oe.args)
+                    bool_bi_insert = False
+                except pymssql.ProgrammingError as pe:
+                    string_sql_error += 'A program error was raised|' + str(pe.args)
+                    bool_bi_insert = False
+                except pymssql.DatabaseError as dbe:
+                    string_sql_error += 'Database error raised|' + str(dbe.args)
+                    bool_bi_insert = False
+                except pymssql.DataError as de:
+                    string_sql_error += 'Data error raised|' + str(de.args)
+                    bool_bi_insert = False
+                except pymssql.IntegrityError as inte:
+                    string_sql_error += 'Integrity error raised|' + str(inte.args)
+                    bool_bi_insert = False
+                except pymssql.InterfaceError as ife:
+                    string_sql_error += 'Interface error raised|' + str(ife.args)
+                    bool_bi_insert = False
+                except pymssql.InternalError as ie:
+                    string_sql_error += 'Internal error raised|' + str(ie.args)
+                    bool_bi_insert = False
+                except pymssql.NotSupportedError as nse:
+                    string_sql_error += 'Not supported error raised|' + str(nse.args)
+                    bool_bi_insert = False
+                except pymssql.StandardError as se:
+                    string_sql_error += 'Standard error raised|' + str(se.args)
+                    bool_bi_insert = False
+                except pymssql.Error as e:
+                    string_sql_error += 'General error raised|' + str(e.args)
+                    bool_bi_insert = False
+                else:
+                    pass
+                finally:
+                    list_commit.append(self._commit())
+                    list_return.append([bool_bi_insert, string_sql_error])
+
+        # did not pass file validation
         elif not bool_files:
             string_bf = 'the files option passed to m_var_files did not validate'
             string_bf += ', check the option and the files in designated folder'
-            list_return = [False, string_bf]
-        elif not self._list_conn[0]:
+            list_return = [[False, string_bf]]
+            list_commit = [[None, '']]
+        
+        # not connected
+        elif not self.bool_is_connected:
             string_ce = 'there is not a connection to the database'
             string_ce += ', check connection and try again'
-            list_return = [False, string_ce]
+            list_return = [[False, string_ce]]
+            list_commit = [[None, '']]
+        
+        # unkown error
         else:
             string_ue = 'validation failed for unkown reason'
-            list_return = [False, string_ue]
-
+            list_return = [[False, string_ue]]
+            list_commit = [[None, '']]
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -2208,11 +2270,13 @@ class SqlMethods(object):
         # variable / object cleanup
         #--------------------------------------------------------------------------#
 
+        sql_cursor.close()
+
         #--------------------------------------------------------------------------#
         # return value
         #--------------------------------------------------------------------------#
 
-        return list_return
+        return list_return, list_commit
     
     def _bi_meta_files(self, m_string_file_flag, m_string_path, m_set_files):
         '''
