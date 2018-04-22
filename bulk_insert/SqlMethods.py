@@ -2093,7 +2093,7 @@ class SqlMethods(object):
         string_f_option = 'all'
         string_sql_bi = 'bulk insert '
         string_sql_from = " from '"
-        string_sql_with = " with (format = 'CSV')"
+        string_sql_with = " with (FORMAT = 'CSV')"
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -2179,7 +2179,8 @@ class SqlMethods(object):
             for string_file in dict_meta_files:
                 dict_columns = dict_meta_files[string_file]
                 for string_column in dict_columns:
-                    list_columns.append(string_column + ' varchar(' + dict_columns[string_column] + ')')
+                    list_columns.append(string_column + ' varchar(' + \
+                                                        str(dict_columns[string_column]) + ')')
             
             if bool_dt_process:
                 bool_create_table = self.create_table(m_string_table, list_columns)
@@ -2235,10 +2236,12 @@ class SqlMethods(object):
                         string_sql_error += 'General error raised|' + str(e.args)
                         bool_bi_insert = False
                     else:
-                        pass
-                    finally:
-                        list_commit.append(self._commit())
                         list_return.append([bool_bi_insert, string_sql_error])
+                        list_commit.append(self._commit())
+                    finally:
+                        if not bool_bi_insert:
+                            list_return.append([bool_bi_insert, string_sql_error])
+                            list_commit.append([None, ''])
             else:
                 string_nc = 'error in creating table in database'
                 list_return = [[False, string_nc]]
