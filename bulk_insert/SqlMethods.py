@@ -2056,16 +2056,10 @@ class SqlMethods(object):
         
         Return:
         objects
-        Type: list, list
-        Desc: first list is the bulk insert results, second list is the commit results
-        list_00[x] -> type: list; 
-            x[0] -> type: boolean; bulk insert passed or failed
-            x[1] -> type: string; 
-        list_01[y] -> type: list; 
-            y[0] -> type: boolean; submit passed or failed, if None method did not
-                        get to that point
-            y[1] -> type: string; error in submit, if empty string method did not get
-                        to that point
+        Type: list
+        Desc: results of modified files insert into table
+        list[x][0] -> type: boolean; if insert for file worked
+        list[x][1] -> type: string; error if insert failed, empty string if success
         '''
 
         #--------------------------------------------------------------------------#
@@ -2081,7 +2075,6 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         list_columns = list()
-        list_commit = list()
         list_return = list()
 
         #--------------------------------------------------------------------------#
@@ -2092,9 +2085,6 @@ class SqlMethods(object):
         bool_dt_process = True
         bool_create_table = False
         string_f_option = 'all'
-        string_sql_bi = 'bulk insert '
-        string_sql_from = " from '"
-        string_sql_with = " with (FORMAT = 'CSV')"
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -2209,61 +2199,11 @@ class SqlMethods(object):
                             df_insert[string_table_col] = series_col_none
                     df_insert = df_insert[list_table_columns[1]]
 
-                    # create variables
-                    string_sql_bulk_insert = string_sql_bi + m_string_table
-                    string_path_temp = os.path.join(m_string_path, string_file)
-                    string_sql_bulk_insert += string_sql_from + string_path_temp + "'"
-                    string_sql_bulk_insert += string_sql_with
-                    bool_bi_insert = True
-                    string_sql_error = ''
-
-
-
-                    # create cursor
-                    sql_cursor = self._list_conn[1].cursor()
-
-                    # bulk insert
-                    try:
-                        sql_cursor.execute(string_sql_bulk_insert)
-                    except pymssql.OperationalError as oe:
-                        string_sql_error += 'Operational error was raised' + str(oe.args)
-                        bool_bi_insert = False
-                    except pymssql.ProgrammingError as pe:
-                        string_sql_error += 'A program error was raised|' + str(pe.args)
-                        bool_bi_insert = False
-                    except pymssql.DatabaseError as dbe:
-                        string_sql_error += 'Database error raised|' + str(dbe.args)
-                        bool_bi_insert = False
-                    except pymssql.DataError as de:
-                        string_sql_error += 'Data error raised|' + str(de.args)
-                        bool_bi_insert = False
-                    except pymssql.IntegrityError as inte:
-                        string_sql_error += 'Integrity error raised|' + str(inte.args)
-                        bool_bi_insert = False
-                    except pymssql.InterfaceError as ife:
-                        string_sql_error += 'Interface error raised|' + str(ife.args)
-                        bool_bi_insert = False
-                    except pymssql.InternalError as ie:
-                        string_sql_error += 'Internal error raised|' + str(ie.args)
-                        bool_bi_insert = False
-                    except pymssql.NotSupportedError as nse:
-                        string_sql_error += 'Not supported error raised|' + str(nse.args)
-                        bool_bi_insert = False
-                    except pymssql.StandardError as se:
-                        string_sql_error += 'Standard error raised|' + str(se.args)
-                        bool_bi_insert = False
-                    except pymssql.Error as e:
-                        string_sql_error += 'General error raised|' + str(e.args)
-                        bool_bi_insert = False
-                    else:
-                        list_return.append([bool_bi_insert, string_sql_error])
-                        list_commit.append(self._commit())
-                    finally:
-                        if not bool_bi_insert:
-                            list_return.append([bool_bi_insert, string_sql_error])
-                            list_commit.append([None, ''])
-
-                    sql_cursor.close()
+                    # insert into database
+                    list_insert_results = self.insert(m_string_table, 
+                                                            list_table_columns[1],
+                                                            df_insert.values.tolist())
+                    list_return.append(list_insert_results)
             else:
                 string_nc = 'error in creating table in database'
                 list_return = [[False, string_nc]]
@@ -2274,38 +2214,23 @@ class SqlMethods(object):
             string_bf = 'the files option passed to m_var_files did not validate'
             string_bf += ', check the option and the files in designated folder'
             list_return = [[False, string_bf]]
-            list_commit = [[None, '']]
         
         # not connected
         elif not self.bool_is_connected:
             string_ce = 'there is not a connection to the database'
             string_ce += ', check connection and try again'
             list_return = [[False, string_ce]]
-            list_commit = [[None, '']]
         
         # unkown error
         else:
             string_ue = 'validation failed for unkown reason'
             list_return = [[False, string_ue]]
-            list_commit = [[None, '']]
-
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #
-        # sectional comment
-        #
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
-
-        #--------------------------------------------------------------------------#
-        # variable / object cleanup
-        #--------------------------------------------------------------------------#
 
         #--------------------------------------------------------------------------#
         # return value
         #--------------------------------------------------------------------------#
 
-        return list_return, list_commit
+        return list_return
     
     def _bi_meta_files(self, m_string_file_flag, m_string_path, m_set_files):
         '''

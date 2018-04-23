@@ -198,7 +198,7 @@ def main(list_args = []):
     # bulk insert
     #--------------------------------------------------------------------------#
 
-    tuple_bulk_insert = sql_local.bulk_insert(string_sql_table, string_path)
+    list_bulk_insert = sql_local.bulk_insert(string_sql_table, string_path)
     print(tuple_bulk_insert)
 
     #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
