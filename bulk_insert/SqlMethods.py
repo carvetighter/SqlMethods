@@ -9,7 +9,6 @@
 import pymssql
 import collections
 import pandas
-import numpy
 import os
 from xml.dom import minidom
 
