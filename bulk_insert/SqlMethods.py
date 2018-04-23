@@ -75,7 +75,7 @@ class SqlMethods(object):
             - check the columns from the table
 
     bulk_insert()
-            - inserts files from a designated folder into a table as strings
+            - inserts csv files from a designated folder into a table as strings
     
     Attributes:
     bool_is_connected
