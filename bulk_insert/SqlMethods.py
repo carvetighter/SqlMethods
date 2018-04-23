@@ -9,6 +9,7 @@
 import pymssql
 import collections
 import pandas
+import numpy
 import os
 from xml.dom import minidom
 
@@ -2170,7 +2171,7 @@ class SqlMethods(object):
                                         set(m_var_files))
 
             #--------------------------------------------------------------------------#
-            # delete table if exists; create table
+            # delete table if exists; create table; column names
             #--------------------------------------------------------------------------#
 
             if self.table_exists(m_string_table):
@@ -2185,12 +2186,29 @@ class SqlMethods(object):
             if bool_dt_process:
                 bool_create_table = self.create_table(m_string_table, list_columns)
             
+            if bool_create_table:
+                list_table_columns = self.get_table_columns(m_string_table)
+
             #--------------------------------------------------------------------------#
             # begin bulk insert process
             #--------------------------------------------------------------------------#      
 
             if bool_create_table:
                 for string_file in m_var_files:
+                    # read in file
+                    string_path_orig = os.path.join(m_string_path, string_file)
+                    df_insert = pandas.read_csv(string_path_orig)
+                    set_file_columns = set(df_insert.columns)
+                    list_data_none = [None] * len(df_insert)
+
+                    # check columns
+                    for string_table_col in list_table_columns[1]:
+                        if string_table_col not in set_file_columns:
+                            series_col_none = pandas.Series(list_data_none)
+                            series_col_none.index = df_insert.index
+                            df_insert[string_table_col] = series_col_none
+                    df_insert = df_insert[list_table_columns[1]]
+
                     # create variables
                     string_sql_bulk_insert = string_sql_bi + m_string_table
                     string_path_temp = os.path.join(m_string_path, string_file)
@@ -2198,6 +2216,8 @@ class SqlMethods(object):
                     string_sql_bulk_insert += string_sql_with
                     bool_bi_insert = True
                     string_sql_error = ''
+
+
 
                     # create cursor
                     sql_cursor = self._list_conn[1].cursor()
@@ -2242,6 +2262,8 @@ class SqlMethods(object):
                         if not bool_bi_insert:
                             list_return.append([bool_bi_insert, string_sql_error])
                             list_commit.append([None, ''])
+
+                    sql_cursor.close()
             else:
                 string_nc = 'error in creating table in database'
                 list_return = [[False, string_nc]]
@@ -2278,8 +2300,6 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
         # variable / object cleanup
         #--------------------------------------------------------------------------#
-
-        sql_cursor.close()
 
         #--------------------------------------------------------------------------#
         # return value
