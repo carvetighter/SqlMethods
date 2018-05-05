@@ -2301,7 +2301,8 @@ class SqlMethods(object):
         if m_string_file_flag == 'all':
             for string_file in m_set_files:              
                 # add file column info to dictionary
-                dict_return[string_file] = self._bi_col_dict(string_file, m_string_path)
+                dict_return[string_file], set_table_columns = self._bi_col_dict(
+                    string_file, m_string_path, set_table_columns, dict_return)
         
         #--------------------------------------------------------------------------#
         #  one file
@@ -2342,9 +2343,10 @@ class SqlMethods(object):
 
         return dict_return
 
-    def _bi_col_dict(self, m_string_file, m_string_path):
+    def _bi_col_dict(self, m_string_file, m_string_path, m_set_columns, m_dict_files):
         '''
-        this method ??
+        this method finds the max length of the column and checks if there was
+        a previous column measured
         
         Requirements:
         package pandas
@@ -2358,6 +2360,18 @@ class SqlMethods(object):
         m_string_path
         Type: string
         Desc: file path
+
+        m_set_columns
+        Type: set
+        Desc: columns already searched
+
+        m_dict_files
+        Type: dictionary
+        Desc: of files and unique columns for each file
+        key -> type: string; file name
+        value -> dictionary; each column of a file that is unique
+                        key -> type: string; column name of file
+                        value -> integer; the max length of the column
             
         Important Info:
         None
@@ -2386,6 +2400,11 @@ class SqlMethods(object):
         # variables declarations
         #--------------------------------------------------------------------------#
 
+        if len(m_set_columns) == 0:
+            bool_new_file = True
+        else:
+            bool_new_file = False
+
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #
@@ -2404,11 +2423,30 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
         # get column names
         #--------------------------------------------------------------------------#
+
         for string_col in df_temp:
-            dict_file_col_info[string_col] = df_temp[string_col].str.len().max()
+            # get max length of column
+            int_max_len = df_temp[string_col].str.len().max()
+            
+            # if no columns started
+            if bool_new_file:
+                dict_file_col_info[string_col] = int_max_len
+                m_set_columns.add(string_col)
+            
+            # if columns already searched
+            else:
+                if string_col in m_set_columns:
+                    for string_file in m_dict_files:
+                        dict_file_col = m_dict_files[string_file]
+                        if string_col in dict_file_col and int_max_len > dict_file_col[string_col]:
+                            dict_file_col_info[string_col] = int_max_len
+                            m_dict_files[string_file].pop(string_col)
+                else:
+                    dict_file_col_info[string_col] = int_max_len
+                    m_set_columns.add(string_col)
 
         #--------------------------------------------------------------------------#
         # return value
         #--------------------------------------------------------------------------#
 
-        return dict_file_col_info 
+        return dict_file_col_info, m_set_columns
