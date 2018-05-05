@@ -2299,24 +2299,9 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         if m_string_file_flag == 'all':
-            for string_file in m_set_files:
-                # create DataFrame
-                string_file_path = os.path.join(m_string_path, string_file)
-                df_temp = pandas.read_csv(string_file_path, dtype = str)
-                
-                # get column names
-                dict_file_col_info = dict()
-                for string_col in df_temp:
-                    if string_col not in set_table_columns:
-                        dict_file_col_info[string_col] = df_temp[string_col].str.len().max()
-                        set_table_columns.add(string_col)
-                
+            for string_file in m_set_files:              
                 # add file column info to dictionary
-                dict_return[string_file] = dict_file_col_info
-
-                # clean-up
-                del df_temp, string_file_path, dict_file_col_info
-                del string_col
+                dict_return[string_file] = self._bi_col_dict(string_file, m_string_path)
         
         #--------------------------------------------------------------------------#
         #  one file
@@ -2356,3 +2341,74 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         return dict_return
+
+    def _bi_col_dict(self, m_string_file, m_string_path):
+        '''
+        this method ??
+        
+        Requirements:
+        package pandas
+        package os
+        
+        Inputs:
+        m_string_file
+        Type: string
+        Desc: file name
+        
+        m_string_path
+        Type: string
+        Desc: file path
+            
+        Important Info:
+        None
+        
+        Return:
+        object
+        Type: dictionary
+        Desc: file column information
+        '''
+
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # iterator declarations
+        #--------------------------------------------------------------------------#
+
+        dict_file_col_info = dict()
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # create DataFrame
+        #--------------------------------------------------------------------------#
+
+        string_file_path = os.path.join(m_string_path, m_string_path)
+        df_temp = pandas.read_csv(string_file_path, dtype = str)
+        
+        #--------------------------------------------------------------------------#
+        # get column names
+        #--------------------------------------------------------------------------#
+        for string_col in df_temp:
+            dict_file_col_info[string_col] = df_temp[string_col].str.len().max()
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return dict_file_col_info 
