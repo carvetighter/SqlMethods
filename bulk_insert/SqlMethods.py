@@ -2102,9 +2102,9 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         # all the files in the folder
+        set_files = self._get_files(m_string_path)
         if m_var_files == 'all':
             string_f_option = 'all'
-            set_files = self._get_files(m_string_path)
             
             if len(set_files) > 0:
                 bool_files = True
@@ -2119,7 +2119,6 @@ class SqlMethods(object):
         # only one file
         elif isinstance(m_var_files, str):
             string_f_option = 'one'
-            set_files = self._get_files(m_string_path)
             if m_var_files in set_files:
                 bool_files = True
                 
@@ -2127,7 +2126,6 @@ class SqlMethods(object):
         elif isinstance(m_var_files, collections.Sequence) and not \
                 isinstance(m_var_files, str):
             string_f_option = 'multiple'
-            set_files = self._get_files(m_string_path)
             for string_temp_file in m_var_files:
                 if string_temp_file in set_files:
                     bool_files = True
@@ -2298,45 +2296,10 @@ class SqlMethods(object):
         # all files
         #--------------------------------------------------------------------------#
 
-        if m_string_file_flag == 'all':
-            for string_file in m_set_files:              
-                # add file information to dictionary
-                dict_return[string_file], set_table_columns = self._bi_col_dict(
-                    string_file, m_string_path, set_table_columns, dict_return)
-        
-        #--------------------------------------------------------------------------#
-        #  one file
-        #--------------------------------------------------------------------------#
-
-        elif m_string_file_flag == 'one':
+        for string_file in m_set_files:              
+            # add file information to dictionary
             dict_return[string_file], set_table_columns = self._bi_col_dict(
-                    string_file, m_string_path, set_table_columns, dict_return)
-        
-        #--------------------------------------------------------------------------#
-        # multiple files
-        #--------------------------------------------------------------------------#
-
-        elif m_string_file_flag == 'multiple':
-            pass
-                
-        #--------------------------------------------------------------------------#
-        # all else
-        #--------------------------------------------------------------------------#
-        
-        else:
-            pass
-
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #
-        # sectional comment
-        #
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
-
-        #--------------------------------------------------------------------------#
-        # variable / object cleanup
-        #--------------------------------------------------------------------------#
+                string_file, m_string_path, set_table_columns, dict_return)
 
         #--------------------------------------------------------------------------#
         # return value
@@ -2430,9 +2393,9 @@ class SqlMethods(object):
                     if string_file != m_string_file:
                         dict_cl_temp = m_dict_files.get(string_file, None)
                         if dict_cl_temp is not None and string_col in dict_cl_temp \
-                            and int_max_len > dict_cl_temp.get(string_col, None):
+                                and int_max_len > dict_cl_temp.get(string_col, None):
                             dict_file_col_info.update([(string_col, int_max_len)])
-                            dict_cl_temp.pop(string_col)
+                            m_dict_files[string_file].pop(string_col)
 
             # if not on columns and no file
             else:
