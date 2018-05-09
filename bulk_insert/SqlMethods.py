@@ -2300,7 +2300,7 @@ class SqlMethods(object):
 
         if m_string_file_flag == 'all':
             for string_file in m_set_files:              
-                # add file column info to dictionary
+                # add file information to dictionary
                 dict_return[string_file], set_table_columns = self._bi_col_dict(
                     string_file, m_string_path, set_table_columns, dict_return)
         
@@ -2309,7 +2309,8 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         elif m_string_file_flag == 'one':
-            pass
+            dict_return[string_file], set_table_columns = self._bi_col_dict(
+                    string_file, m_string_path, set_table_columns, dict_return)
         
         #--------------------------------------------------------------------------#
         # multiple files
@@ -2377,9 +2378,9 @@ class SqlMethods(object):
         None
         
         Return:
-        object
-        Type: dictionary
-        Desc: file column information
+        object, object
+        Type: dictionary, set
+        Desc: file column information, columns found in file
         '''
 
         #--------------------------------------------------------------------------#
@@ -2400,11 +2401,6 @@ class SqlMethods(object):
         # variables declarations
         #--------------------------------------------------------------------------#
 
-        if len(m_set_columns) == 0:
-            bool_new_file = True
-        else:
-            bool_new_file = False
-
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #
@@ -2417,7 +2413,7 @@ class SqlMethods(object):
         # create DataFrame
         #--------------------------------------------------------------------------#
 
-        string_file_path = os.path.join(m_string_path, m_string_path)
+        string_file_path = os.path.join(m_string_path, m_string_file)
         df_temp = pandas.read_csv(string_file_path, dtype = str)
         
         #--------------------------------------------------------------------------#
@@ -2428,22 +2424,20 @@ class SqlMethods(object):
             # get max length of column
             int_max_len = df_temp[string_col].str.len().max()
             
-            # if no columns started
-            if bool_new_file:
-                dict_file_col_info[string_col] = int_max_len
-                m_set_columns.add(string_col)
-            
-            # if columns already searched
+            # search through files to get the right column
+            if string_col in m_set_columns and len(m_dict_files) > 0:
+                for string_file in m_dict_files:
+                    if string_file != m_string_file:
+                        dict_cl_temp = m_dict_files.get(string_file, None)
+                        if dict_cl_temp is not None and string_col in dict_cl_temp \
+                            and int_max_len > dict_cl_temp.get(string_col, None):
+                            dict_file_col_info.update([(string_col, int_max_len)])
+                            dict_cl_temp.pop(string_col)
+
+            # if not on columns and no file
             else:
-                if string_col in m_set_columns:
-                    for string_file in m_dict_files:
-                        dict_file_col = m_dict_files[string_file]
-                        if string_col in dict_file_col and int_max_len > dict_file_col[string_col]:
-                            dict_file_col_info[string_col] = int_max_len
-                            m_dict_files[string_file].pop(string_col)
-                else:
-                    dict_file_col_info[string_col] = int_max_len
-                    m_set_columns.add(string_col)
+                dict_file_col_info.update([(string_col, int_max_len)])
+                m_set_columns.add(string_col)
 
         #--------------------------------------------------------------------------#
         # return value
