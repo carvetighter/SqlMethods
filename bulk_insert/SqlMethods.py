@@ -125,6 +125,7 @@ class SqlMethods(object):
         # objects for the class
         self._list_conn = list()
         self._dict_flags = {}
+        self._string_bi_path = None        
         self.bool_is_connected = False
 
         # test pamater list to generate the connection
@@ -285,76 +286,6 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         return list_return
-
-    def _get_files(self, m_string_path):
-        '''
-        this method returns a set of files in the directory of csv files
-
-        Requirements:
-        package os
-
-        Inputs:
-        m_string_path
-        Type: string
-        Desc: the path of the directory with bulk upload files
-
-        Important Info:
-        None
-
-        Return:
-        object
-        Type: set
-        Desc: files in the directory
-        '''
-
-        #--------------------------------------------------------------------------#
-        # objects declarations
-        #--------------------------------------------------------------------------#
-
-        #--------------------------------------------------------------------------#
-        # time declarations
-        #--------------------------------------------------------------------------#
-
-        #--------------------------------------------------------------------------#
-        # lists declarations
-        #--------------------------------------------------------------------------#
-
-        #--------------------------------------------------------------------------#
-        # variables declarations
-        #--------------------------------------------------------------------------#
-
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #
-        # Start
-        #
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-
-        #--------------------------------------------------------------------------#
-        # sub-section comment
-        #--------------------------------------------------------------------------#
-
-        for _, _, list_files in os.walk(m_string_path):
-            break
-
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #
-        # sectional comment
-        #
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-
-        #--------------------------------------------------------------------------#
-        # variable / object cleanup
-        #--------------------------------------------------------------------------#
-
-        #--------------------------------------------------------------------------#
-        # return value
-        #--------------------------------------------------------------------------#
-
-        return set(list_files)
 
     def gen_connection(self, m_string_user, m_string_host, m_string_pswd, m_string_db_name):
         '''
@@ -2081,6 +2012,7 @@ class SqlMethods(object):
         bool_dt_process = True
         bool_create_table = False
         string_f_option = 'all'
+        self._string_bi_path = m_string_path
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -2099,7 +2031,7 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         # all the files in the folder
-        set_files = self._get_files(m_string_path)
+        set_files = self._bi_get_files()
         if m_var_files == 'all':
             string_f_option = 'all'
 
@@ -2223,6 +2155,47 @@ class SqlMethods(object):
         #--------------------------------------------------------------------------#
 
         return list_return
+
+    def _bi_get_files(self):
+        '''
+        this method returns a set of files in the directory of csv files
+
+        Requirements:
+        package os
+
+        Inputs:
+        n/a
+        Type: n/a
+        Desc: n/a
+
+        Important Info:
+        1. self._string_bi_path needs to be set
+
+        Return:
+        object
+        Type: set
+        Desc: files in the directory
+        '''
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+        if self._string_bi_path is not None:
+            for _, _, list_files in os.walk(self._string_bi_path):
+                break
+        else:
+            raise ValueError('path to folder of data files is not set')
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return set(list_files)
 
     def _bi_meta_files(self, m_string_file_flag, m_string_path, m_set_files):
         '''
