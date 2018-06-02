@@ -2386,11 +2386,11 @@ class SqlMethods(object):
             if string_col in m_set_columns and len(m_dict_files) > 0:
                 for string_file in m_dict_files:
                     if string_file != m_string_file:
-                        dict_cl_temp = m_dict_files.get(string_file, None)
+                        dict_cl_temp = m_dict_files.get(string_file)
                         if dict_cl_temp is not None and string_col in dict_cl_temp \
-                                and int_max_len > dict_cl_temp.get(string_col, None):
+                                and int_max_len > dict_cl_temp.get(string_col):
                             dict_file_col_info.update([(string_col, int_max_len)])
-                            m_dict_files[string_file].pop(string_col)
+                            m_dict_files.get(string_file).pop(string_col)
 
             # if not on columns and no file
             else:
