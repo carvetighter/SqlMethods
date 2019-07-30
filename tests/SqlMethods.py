@@ -8,6 +8,8 @@
 
 import pymssql
 import collections
+import pandas
+import os
 from xml.dom import minidom
 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -72,6 +74,9 @@ class SqlMethods(object):
     get_wide_columns()
             - check the columns from the table
 
+    bulk_insert()
+            - inserts files from a designated folder into a table as strings
+    
     Attributes:
     bool_is_connected
             - flag to determine if the connection is open or closed
@@ -185,6 +190,168 @@ class SqlMethods(object):
             str_return_string = str_return_string[:-1]
     
         return str_return_string
+
+    def _commit(self):
+        '''
+        this method makes an attempt to commit a transaction and will return 
+        True or False if the transaction has been commited to the Sql database
+        
+        Requirements:
+        package pymssql
+        
+        Inputs:
+        n/a
+        Type: none
+        Desc: none
+            
+        Important Info:
+        None
+        
+        Return:
+        object
+        Type: list
+        Desc: boolean if the commit occured and the error if there is any
+        list_return[0] -> type: boolean; flag to indicate if the commit executed
+                                without and error
+        list_return[1] -> type: string; the error message or an empty string if
+                                no error
+        '''
+
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # lists declarations
+        #--------------------------------------------------------------------------#
+
+        list_return = list()
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # test for connection then commit
+        #--------------------------------------------------------------------------#
+
+        if self._list_conn[0]:
+            try:
+                self._list_conn[1].commit()
+            except pymssql.OperationalError as oe:
+                bool_commit = False
+                string_error = str(oe.args)
+            except pymssql.Error as e:
+                bool_commit = False
+                string_error = str(e.args)
+            else:
+                bool_commit = True
+                string_error = ''
+            finally:
+                list_return = [bool_commit, string_error]
+        else:
+            list_return = [False, 
+                                ValueError('attempted to commit with no connection')]
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # sectional comment
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # variable / object cleanup
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return list_return
+
+    def _get_files(self, m_string_path):
+        '''
+        this method returns a set of files in the directory of csv files
+        
+        Requirements:
+        package os
+        
+        Inputs:
+        m_string_path
+        Type: string
+        Desc: the path of the directory with bulk upload files
+
+        Important Info:
+        None
+        
+        Return:
+        object
+        Type: set
+        Desc: files in the directory
+        '''
+
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # lists declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # sub-section comment
+        #--------------------------------------------------------------------------#
+
+        for _, _, list_files in os.walk(m_string_path):
+            break
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # sectional comment
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # variable / object cleanup
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return set(list_files)
 
     def gen_connection(self, m_string_user, m_string_host, m_string_pswd, m_string_db_name):
         '''
@@ -777,7 +944,7 @@ class SqlMethods(object):
                 str_sql_error += str(e.args)
             else:
                 bool_deleted = True
-                self._list_conn[1].commit()
+                list_commit = self._commit()
             finally:
                 pass
     
@@ -845,7 +1012,7 @@ class SqlMethods(object):
                 str_sql_error += str(e.args)
             else:
                 bool_truncate_table = True
-                #self._list_conn[1].commit()
+                list_commit = self._commit()
             finally:
                 pass
 
@@ -1109,8 +1276,10 @@ class SqlMethods(object):
                     str_sql_error += ';General error raised|' + str(e.args)
                     bool_insert_into_table = False
                 else:
-                    pass
-                    self._list_conn[1].commit()
+                    list_commit = self._commit()
+                    if not list_commit[0]:
+                        str_sql_error += list_commit[1]
+                        bool_insert_into_table = False
                 finally:
                     pass
 
@@ -1240,7 +1409,7 @@ class SqlMethods(object):
                 str_sql_error += str(e.args)
             else:
                 bool_created = True
-                self._list_conn[1].commit()
+                list_commit = self._commit()
             finally:
                 pass
 
@@ -1396,7 +1565,7 @@ class SqlMethods(object):
                 else:
                     string_error = ''
                     bool_return = True
-                    #self._list_conn[1].commit()
+                    list_commit = self._commit()
                 finally:
                     pass
 
@@ -1515,7 +1684,7 @@ class SqlMethods(object):
                 str_sql_error += str(se.args)
             else:
                 bool_insert_into_table = True
-                #self._list_conn[1].commit()
+                list_commit = self._commit()
             finally:
                 pass
 
@@ -1840,7 +2009,7 @@ class SqlMethods(object):
                 str_sql_error += str(e.args)
             else:
                 bool_alter_table = True
-                #self._list_conn[1].commit()
+                list_commit = self._commit()
             finally:
                 pass
 
@@ -1852,3 +2021,302 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
         return [bool_alter_table, string_error]
+
+    def bulk_insert(self, m_string_table, m_string_path, m_var_files = 'all'):
+        '''
+        this method impliments the bulk insert of one or more files from a 
+        designated folder
+        
+        Requirements:
+        package pymssql
+        package pandas
+        
+        Inputs:
+        m_string_table
+        Type: string
+        Desc: the name of the table to insert files
+        
+        m_string_path
+        Type: string
+        Desc: path to file directory
+
+        m_var_files
+        Type: string or iterator
+        Desc: multiple options to insert one, multiple or all files in a directory
+            'all' -> insert all files from the directory
+            'file_name.csv' -> inserts only one file from the directory
+            ['file_name_00.csv', 'file_name_01.csv', ..] -> inserts only the files in
+                the list
+            
+        Important Info:
+        1. assumes all csv's have a header for the column name
+        2. assumes there are no sub-directories in the target directory or all
+            the desired csv's are in the top level of the target directory
+        
+        Return:
+        object
+        Type: list
+        Desc: this of the clusters that meet the evaluation criterea
+        list[0] -> type: boolean; flag if bulk insert executed correctly
+        list[1] -> type: string; error message if list[0] is False or empty
+                string if list[0] is True
+        '''
+
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # lists declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        bool_files = False
+        string_f_option = 'all'
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # file test to begin process
+        #
+        # question here whether to put all the files found in a list
+        # from a list of files to insert into the db or just to return 
+        # False because all the files passed are not in the directory
+        #--------------------------------------------------------------------------#
+
+        # all the files in the folder
+        if m_var_files == 'all':
+            set_files = self._get_files(m_string_path)
+            if len(set_files) > 0:
+                for string_file in set_files:
+                    if string_file[-3] == 'csv':
+                        bool_files = True
+                    else:
+                        bool_files = False
+                        break
+        
+        # only one file
+        elif isinstance(m_var_files, str):
+            string_f_option = 'one'
+            set_files = self._get_files(m_string_path)
+            if m_var_files in set_files:
+                bool_files = True
+                
+        # multiple files but not all files in folder
+        elif isinstance(m_var_files, collections.Sequence) and not \
+                isinstance(m_var_files, str):
+            string_f_option = 'multiple'
+            set_files = self._get_files(m_string_path)
+            for string_temp_file in m_var_files:
+                if string_temp_file in set_files:
+                    bool_files = True
+                else:
+                    bool_files = False
+                    break
+        
+        # error out
+        else:
+            string_ve = 'variable or object passed for is not one of three'
+            string_ve += " options 'all', '<file_name.csv>',  or a list or tuple"
+            string_ve += ' with strings for file names.'
+            raise ValueError(string_ve)
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # begin the bulk insert process
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$# 
+
+        if bool_files and self._list_conn[0]:
+            #--------------------------------------------------------------------------#
+            # delete table if exists
+            #--------------------------------------------------------------------------#
+
+            df_meta_files = self._bi_meta_files(string_f_option, m_string_path,
+                                        set_files)
+
+            #--------------------------------------------------------------------------#
+            # delete table if exists
+            #--------------------------------------------------------------------------#
+
+            if self.table_exists(m_string_table):
+                bool_dt_process = self.delete_table(m_string_table)
+
+        elif not bool_files:
+            string_bf = 'the files option passed to m_var_files did not validate'
+            string_bf += ', check the option and the files in designated folder'
+            list_return = [False, string_bf]
+        elif not self._list_conn[0]:
+            string_ce = 'there is not a connection to the database'
+            string_ce += ', check connection and try again'
+            list_return = [False, string_ce]
+        else:
+            string_ue = 'validation failed for unkown reason'
+            list_return = [False, string_ue]
+
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # sectional comment
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # variable / object cleanup
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return list_return
+    
+    def _bi_meta_files(self, m_string_file_flag, m_string_path, m_set_files):
+        '''
+        this method gathers meta data on the designated files; the data gathered
+        is the file name, length (number of lines), max string length of column, column
+        names
+        
+        Requirements:
+        package pandas
+        package os
+        
+        Inputs:
+        m_string_file_flag
+        Type: string
+        Desc: the flag to determine how to get the metadata from each file
+
+        m_string_path
+        Type: string
+        Desc: path to the file directory
+        
+        m_set_files
+        Type: set
+        Desc: strings which represent the files in the target directory
+
+        Important Info:
+        None
+        
+        Return:
+        object
+        Type: pandas DataFrame
+        Desc: metadata on files
+        string_file -> type: string; name of file
+        int_length -> type: int; the length of each file, number of records 
+                            (excludes header)
+        int_max_string -> type: int; max length of an element in all columns when
+                            converted to a string; there should only be on per file
+        string_col_00 -> type: string; the name of the first column of file;
+                            this will vary depending on the number of columns which will be
+                            the file with the most columns; string_col_01, string_col_02, 
+                            string_col_03, etc...; for files that have less columns None will
+                            be in the DataFrame column for that file
+        '''
+        
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        df_return = pandas.DataFrame()
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # lists declarations
+        #--------------------------------------------------------------------------#
+
+        list_meta_00 = list()
+        list_meta_col = list()
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # all files
+        #--------------------------------------------------------------------------#
+        if m_string_file_flag == 'all':
+            for string_file in m_set_files:
+                # create DataFrame
+                string_file_path = os.path.join(m_string_path, string_file)
+                # ?? check to see if you can read file where all columns are strings
+                df_temp = pandas.DataFrame(pandas.read_csv(string_file_path))
+
+                # get column names
+                list_meta_col.append(df_temp.columns)
+
+                # file meta
+                int_length = len(df_temp)
+                int_str_max = 0
+                for string_col in df_temp:
+                    int_temp_str_max = df_temp[string_col].str.len.max()
+                    if int_temp_str_max > int_str_max:
+                        int_str_max = int_temp_str_max
+                
+                # add information to list
+                list_meta_00.append([string_file, int_length, int_str_max])
+
+                # clean-up
+                del df_temp, string_file_path, int_length, int_str_max
+                del int_temp_str_max, string_col
+            
+            # ??
+        
+        #--------------------------------------------------------------------------#
+        #  one file
+        #--------------------------------------------------------------------------#
+        elif m_string_file_flag == 'one':
+            pass
+        
+        #--------------------------------------------------------------------------#
+        # multiple files
+        #--------------------------------------------------------------------------#
+        elif m_string_file_flag == 'multiple':
+            pass
+        else:
+            pass
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # sectional comment
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+
+        #--------------------------------------------------------------------------#
+        # variable / object cleanup
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return df_return

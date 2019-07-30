@@ -1,28 +1,35 @@
+'''
+Class SqlMethods
+'''
+
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 #
 # File / Package Import
 #
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-#$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#  
+#$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
-import pymssql
 import collections
+import os
 from xml.dom import minidom
+import pandas
+import pymssql
 
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 #
-# Classes 
+# Classes
 #
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
 
 class SqlMethods(object):
     '''
     This class makes it easier to connect and work with a sql server.  The list of methods below are firther defined in
     in the methods themselves
-    
+
     Requirements:
     package pymssql
     package collections
@@ -34,43 +41,46 @@ class SqlMethods(object):
 
     close()
             - closes the connection to the database
-    
+
     gen_select_statement()
            - generates the sql select staement
 
     query_select()
             - queries the table
-    
+
     get_num_columns()
             - returns the number of columns in a table
             - can be used to determine if table is wide or not
-    
+
     get_table_columns()
             - returns the columns in a table
-    
+
     table_exists()
             - tests if a table exists or not
-    
+
     delete_table()
             - deletes the table in a database
-    
+
     create_table()
             - creates a table in a database
-    
+
     truncate_table()
             - delete all the contents in a table
 
     delete_records()
             - delete certain records of the table
-    
+
     insert()
            - inserts values into a table in a database
-    
+
     update()
           - update existing columns in a table
-    
+
     get_wide_columns()
             - check the columns from the table
+
+    bulk_insert()
+            - inserts csv files from a designated folder into a table as strings
 
     Attributes:
     bool_is_connected
@@ -80,13 +90,13 @@ class SqlMethods(object):
     '''
 
     def __init__(self, list_conn_param = []):
-        '''      
+        '''
         this method initialized the class; if a list is paassed and has all the paramaters a connection will be generated to
         the sql server
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         list_conn_param
         Type: list
@@ -95,11 +105,11 @@ class SqlMethods(object):
         list_conn_param[1] -> type: string; host or server
         list_conn_param[2] -> type: string; user password
         list_conn_param[3] -> type: string; database name
-        
+
         Important Info:
         1. the paramaters must use r'xxxxx' as raw strings but is used in relational expressions,
             eg. m_string_user = r'user name'
-        
+
         Objects and Properties:
         list_conn
         Type: list
@@ -111,19 +121,19 @@ class SqlMethods(object):
         Type: boolean
         Desc: flag to help the user to determine if the connection is generated
         '''
-        
+
         # objects for the class
         self._list_conn = list()
         self._dict_flags = {}
+        self._string_bi_path = None        
         self.bool_is_connected = False
-        
+
         # test pamater list to generate the connection
         if len(list_conn_param) == 4 and isinstance(list_conn_param, collections.Sequence) and not isinstance(
-            list_conn_param, str):
-            self.gen_connection(m_string_user = list_conn_param[0],
-                                              m_string_host = list_conn_param[1],
-                                              m_string_pswd = list_conn_param[2],
-                                              m_string_db_name = list_conn_param[3])
+                list_conn_param, str):
+            self.gen_connection(
+                m_string_user = list_conn_param[0], m_string_host = list_conn_param[1],
+                m_string_pswd = list_conn_param[2], m_string_db_name = list_conn_param[3])
 
     def _update_flags(self, *args):
         '''
@@ -138,32 +148,32 @@ class SqlMethods(object):
     def _build_column_string(self, m_list = [], bool_insert = False):
         '''
         this method will create a string that represents the columns from m_list
-        
+
         Requirements:
         None
-        
+
         Inputs:
         m_list_values
         Type: list
         Desc: the list of columns or values to create the string
-        
+
         bool_insert
         Type: boolean
         Desc: a flag to if this is used to insert to another statement
-         
+
         Important Info:
         None
-         
+
         Return:
         variable
         Type: string
         Desc: this string has the parentheses and just need to be appended to the sql statement string
                    error can be detected by testing for the empty string
         '''
-        #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+        #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
-        
+
         str_return_string = ''
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -172,67 +182,158 @@ class SqlMethods(object):
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#     
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
         # build column string
         for element in m_list:
             str_return_string += str(element) + ','
 
         # clean up the return string
-        if bool_insert == True:
+        if bool_insert:
             str_return_string = '(' + str_return_string[:-1] + ')'
         else:
             str_return_string = str_return_string[:-1]
-    
+
         return str_return_string
+
+    def _commit(self):
+        '''
+        this method makes an attempt to commit a transaction and will return
+        True or False if the transaction has been commited to the Sql database
+
+        Requirements:
+        package pymssql
+
+        Inputs:
+        n/a
+        Type: none
+        Desc: none
+
+        Important Info:
+        None
+
+        Return:
+        object
+        Type: list
+        Desc: boolean if the commit occured and the error if there is any
+        list_return[0] -> type: boolean; flag to indicate if the commit executed
+                                without and error
+        list_return[1] -> type: string; the error message or an empty string if
+                                no error
+        '''
+
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # lists declarations
+        #--------------------------------------------------------------------------#
+
+        list_return = list()
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+        #--------------------------------------------------------------------------#
+        # test for connection then commit
+        #--------------------------------------------------------------------------#
+
+        if self._list_conn[0]:
+            try:
+                self._list_conn[1].commit()
+            except pymssql.OperationalError as oe:
+                bool_commit = False
+                string_error = str(oe.args)
+            except pymssql.Error as e:
+                bool_commit = False
+                string_error = str(e.args)
+            else:
+                bool_commit = True
+                string_error = ''
+            finally:
+                list_return = [bool_commit, string_error]
+        else:
+            list_return = [False, ValueError('attempted to commit with no connection')]
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # sectional comment
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+        #--------------------------------------------------------------------------#
+        # variable / object cleanup
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return list_return
 
     def gen_connection(self, m_string_user, m_string_host, m_string_pswd, m_string_db_name):
         '''
         this creates a connect to the designated sql server (m_string_host) and database and returns that connection
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_string_user
         Type: string
         Desc: the designated user that will connect to the database
-        
+
         m_string_host
         Type: string
         Desc: the host / sql server to connect to
-        
+
         m_psm_string_pswdwd
         Type: string
         Desc: the password for the user
-        
+
         m_string_db_name
         Type: string
         Desc: the database to connect to on the host / sql server
-        
+
         Important Info:
         1. for the paramaters must use r'xxxxx' as raw strings but is used in relational expressions,
             eg. m_string_user = r'user name'
-        2. this is just the connection and does not include the cursor that is needed or that will hold the data from the 
+        2. this is just the connection and does not include the cursor that is needed or that will hold the data from the
             server connection
-        
+
         Return:
         list
         Type: list
         Desc: a two element list which will tell if there is a connection or not; will add this to the list_conn
-        list_connection[0] -> type: boolean; if True the connection is good and connected to the server, if False did not 
+        list_connection[0] -> type: boolean; if True the connection is good and connected to the server, if False did not
                                                 connect to the server
         list_connection[1] -> type: pymssql sql server connection object; if list_connection[0] is true then there this will be
                                                 be populated with the sql connection; if false this will be empty string object
         '''
 
-        #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+        #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # sequence declarations (list, set, tuple)
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
         list_connection = list()
 
-        #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+        #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -245,7 +346,7 @@ class SqlMethods(object):
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # generate connection
@@ -275,58 +376,57 @@ class SqlMethods(object):
     def close(self):
         '''
         this method closes the connetion if it exists
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         None
-        
+
         Important Info:
         None
-        
+
         Return:
         None
         Type: n/a
         Desc: n/a
         '''
-        if self._list_conn[0] == True:
+        if self._list_conn[0]:
             self._list_conn[1].close()
             self._list_conn[0] = False
             self._update_flags('bool_is_connected')
 
-    def gen_select_statement(self, m_string_init = '', m_string_select = '', m_string_from = '', m_string_where = '', 
-                                               m_string_end = ''):
+    def gen_select_statement(self, m_string_init = '', m_string_select = '', m_string_from = '', m_string_where = '', m_string_end = ''):
         '''
         this method generates the select query string from the server
-        
+
         Requirements:
         None
-        
+
         Inputs:
         m_string_init
         Type: string
         Desc: any text before the select statement
-          
+
         m_string_select
         Type: string
         Desc: table to pull the data from
-          
+
         m_string_from
         Type: string
         Desc: the tables select from the table or anything after the 'FROM' statement
-          
+
         m_string_where
         Type: string
         Desc: any qualifiers to be able to select the data based on any columns
-          
+
         m_string_end
         Type: string
         Desc: any text after the where statement
-          
+
         Important Info:
         none
-        
+
         Return:
         variable
         Type: string
@@ -336,16 +436,16 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
-        
+
         str_return = ''
-        
+
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#   
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
         # test for initial part of string
         if len(m_string_init) > 0:
@@ -377,18 +477,18 @@ class SqlMethods(object):
         '''
         this method will return three lists the columns names and the data types in a database on a sql server in a pymssql
         format and the sql data types
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_string_table
         Type: string
         Desc: the name of the table to get the number of columns
-          
+
         Important Info:
         ensure table names are in the format schema.table_name
-        
+
         Return:
         object
         Type: list, if no connect return None
@@ -418,32 +518,29 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
         list_columns = list()
-        list_data_type = list()
         list_col_dec = list()
         list_return = list()
 
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
-        
+
         # schema and table name
         string_schema, string_table_name = m_string_table.split('.')
-        
+
         # where clause
         string_query_col_where = "TABLE_NAME = N'" + string_table_name + "' and TABLE_SCHEMA = '" + \
                                                     string_schema + "'"
         # columns queries
-        str_query_col = self.gen_select_statement(m_string_select = 'COLUMN_NAME', 
-                                                                            m_string_from = 'INFORMATION_SCHEMA.COLUMNS',
-                                                                           m_string_where = string_query_col_where,
-                                                                           m_string_end = 'Order by ORDINAL_POSITION') 
-        str_query_dt = self.gen_select_statement(m_string_select = 'DATA_TYPE', 
-                                                                         m_string_from = 'INFORMATION_SCHEMA.COLUMNS', \
-                                                                         m_string_where = string_query_col_where,
-                                                                         m_string_end = 'Order by ORDINAL_POSITION') 
-        str_query_sys_table_obj_id = self.gen_select_statement(m_string_select = 'object_id',
-                                                                        m_string_from = 'sys.tables',
-                                                                        m_string_where = "name = '" + string_table_name + "'")
+        str_query_col = self.gen_select_statement(
+            m_string_select = 'COLUMN_NAME', m_string_from = 'INFORMATION_SCHEMA.COLUMNS',
+            m_string_where = string_query_col_where, m_string_end = 'Order by ORDINAL_POSITION')
+        str_query_dt = self.gen_select_statement(
+            m_string_select = 'DATA_TYPE', m_string_from = 'INFORMATION_SCHEMA.COLUMNS',
+            m_string_where = string_query_col_where, m_string_end = 'Order by ORDINAL_POSITION')
+        str_query_sys_table_obj_id = self.gen_select_statement(
+            m_string_select = 'object_id', m_string_from = 'sys.tables',
+            m_string_where = "name = '" + string_table_name + "'")
 
         # flags
         bool_columns = False
@@ -457,10 +554,10 @@ class SqlMethods(object):
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#   
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
-        if self._list_conn[0] == True:
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+        if self._list_conn[0]:
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # generate cursors
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
@@ -476,14 +573,14 @@ class SqlMethods(object):
             try:
                 sql_cursor_col.execute(str_query_col)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # get the columns from the cursor
                 list_raw_col = sql_cursor_col.fetchall()
@@ -496,10 +593,10 @@ class SqlMethods(object):
             finally:
                 # fill the return list
                 list_return.append(bool_columns)
-                if bool_columns == True:
+                if bool_columns:
                     list_return.append(list_columns)
                 else:
-                    list_reutrn.append(str_sql_error)
+                    list_return.append(string_sql_error)
 
             # close cursor
             sql_cursor_col.close()
@@ -507,18 +604,18 @@ class SqlMethods(object):
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # run data type query
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
-            
+
             try:
                 sql_cursor_dt.execute(str_query_dt)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # get the columns from the cursor
                 list_raw_dt = sql_cursor_dt.fetchall()
@@ -526,7 +623,7 @@ class SqlMethods(object):
                 # convert the information in the tuple to a list
                 list_sql_data_type = [x[0] for x in list_raw_dt]
 
-                # convert sql data type to python data type used in 
+                # convert sql data type to python data type used in
                 # pymssql for insert into a table
                 list_py_data_type = ['%s' for x in list_sql_data_type]
 
@@ -535,11 +632,11 @@ class SqlMethods(object):
             finally:
                 # fill the return list
                 list_return.append(bool_data_type)
-                if bool_data_type == True:
+                if bool_data_type:
                     list_return.append(list_py_data_type)
                     list_return.append(list_sql_data_type)
                 else:
-                    list_return.append(str_sql_error)
+                    list_return.append(string_sql_error)
                     list_return.append('')
 
             # close cursor
@@ -548,18 +645,18 @@ class SqlMethods(object):
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # run sql delcaration column query
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
-            
+
             try:
                 sql_cursor_sql_dec_01.execute(str_query_sys_table_obj_id)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # get the columns from the cursor
                 list_raw_dec_01 = sql_cursor_sql_dec_01.fetchall()
@@ -571,7 +668,7 @@ class SqlMethods(object):
                 bool_dec_01 = True
             finally:
                 # test if retrieved object id
-                if bool_dec_01 == False:
+                if not bool_dec_01:
                     string_table_obj_id = ''
 
             # delete cursor
@@ -579,19 +676,20 @@ class SqlMethods(object):
 
             if len(string_table_obj_id) > 0:
                 # generate the sql statement for the column name and the max length
-                string_col_name_max_len = self.gen_select_statement(m_string_select = 'name, max_length, precision, scale',
-                                                                                m_string_from = 'sys.columns',
-                                                                                m_string_where = "object_id = '" + string_table_obj_id + "'")
+                string_col_name_max_len = self.gen_select_statement(
+                    m_string_select = 'name, max_length, precision, scale',
+                    m_string_from = 'sys.columns',
+                    m_string_where = "object_id = '" + string_table_obj_id + "'")
                 list_col_name_max_len = list()
 
                 try:
                     sql_cursor_sql_dec_02.execute(string_col_name_max_len)
                 except pymssql.OperationalError:
-                    str_sql_error = 'Operational error was raised'
+                    string_sql_error = 'Operational error was raised'
                 except pymssql.ProgrammingError:
-                    str_sql_error = 'A program error was raised.'
+                    string_sql_error = 'A program error was raised.'
                 except pymssql.Error:
-                    str_sql_error = 'General error raised.'
+                    string_sql_error = 'General error raised.'
                 else:
                     # get the columns from the cursor
                     list_raw_dec_02 = sql_cursor_sql_dec_02.fetchall()
@@ -611,7 +709,7 @@ class SqlMethods(object):
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # search to create the sql declaration column list
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
-            
+
             for list_index in range(0, len(list_sql_data_type)):
                 # get the data type
                 string_col_data_type = list_sql_data_type[list_index]
@@ -635,7 +733,7 @@ class SqlMethods(object):
                     list_col_dec.append(list_columns[list_index] + ' ' + string_col_data_type + '(' + string_precision + \
                                     ',' + string_scale + ')')
                 else:
-                    list_col_dec.append(list_columns[list_index] + ' ' + string_col_data_type) 
+                    list_col_dec.append(list_columns[list_index] + ' ' + string_col_data_type)
 
             list_return.append(list_col_dec)
 
@@ -644,9 +742,9 @@ class SqlMethods(object):
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
             return list_return
-        
+
         else:
-        
+
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # return value
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
@@ -656,20 +754,20 @@ class SqlMethods(object):
     def table_exists(self, m_string_table):
         '''
         this method tests if a sql table exists in the database
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_table_name
         Type: string
         Desc: table to test if exists
         need to use scheme
         example: scheme.table_name; dbo.TestTable or FlowParts.DataRaw
-          
+
         Important Info:
         None
-        
+
         Return:
         variable
         Type: boolean
@@ -690,11 +788,11 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
-    
+
         list_sch_tn = m_string_table.split('.')
         string_where = "TABLE_NAME = N'" + list_sch_tn[1] + "' and TABLE_SCHEMA = N'" + list_sch_tn[0] + "'"
-        str_query = self.gen_select_statement('if exists (', '*', 'INFORMATION_SCHEMA.TABLES', string_where, 
-                                       ") select 1 else select 0")
+        str_query = self.gen_select_statement(
+            'if exists (', '*', 'INFORMATION_SCHEMA.TABLES', string_where, ") select 1 else select 0")
         bool_test_table = False
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -703,9 +801,9 @@ class SqlMethods(object):
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#     
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
-        if self._list_conn[0] == True:
+        if self._list_conn[0]:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
 
@@ -725,18 +823,18 @@ class SqlMethods(object):
     def delete_table(self, m_table_name):
         '''
         this method deletes a table from a sql database
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_table_name
         Type: string
         Desc: table to test if exists
-          
+
         Important Info:
         None
-        
+
         Return:
         variable
         Type: boolean
@@ -749,7 +847,7 @@ class SqlMethods(object):
 
         str_query = 'DROP TABLE ' + m_table_name
         bool_deleted = False
-        str_sql_error = ''
+        string_sql_error = ''
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -757,9 +855,9 @@ class SqlMethods(object):
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#    
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
-        if self._list_conn[0] == True:
+        if self._list_conn[0]:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
 
@@ -767,20 +865,20 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(str_query)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error = str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error = str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 bool_deleted = True
-                self._list_conn[1].commit()
+                self._commit()
             finally:
                 pass
-    
+
             # delete cursor
             sql_cursor.close()
 
@@ -790,22 +888,22 @@ class SqlMethods(object):
     def truncate_table(self, m_string_table):
         '''
         this method trucates a the table passed
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_sql_conn
         Type: pymssql connection object
         Desc: this is the connection to the sql server
-         
+
         m_table_name
         Type: string
         Desc: table to test if exists
-          
+
         Important Info:
         this method assumes that the table exists
-        
+
         Return:
         variable
         Type: boolean
@@ -813,12 +911,12 @@ class SqlMethods(object):
         '''
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables declarations
-        #------------------------------------------------------------------------------------------------------------------------------------------------------#        
+        #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
         str_query = r'TRUNCATE TABLE ' + m_string_table
         bool_truncate_table = False
-        str_sql_error = ''
-                
+        string_sql_error = ''
+
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #
@@ -827,7 +925,7 @@ class SqlMethods(object):
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
-        if self._list_conn[0] == True:
+        if self._list_conn[0]:
             # create cursor
             sql_cursor = self._list_conn[1].cursor()
 
@@ -835,17 +933,17 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(str_query)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 bool_truncate_table = True
-                #self._list_conn[1].commit()
+                self._commit()
             finally:
                 pass
 
@@ -858,21 +956,21 @@ class SqlMethods(object):
     def query_select(self, m_string_sql_query = ''):
         '''
         this method gets the sql select query from the database
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_string_sql_query
         Type: string
         Desc: the sql query generated by method gen_selec_statement()
-          
+
         Important Info:
         none
-        
+
         Return:
         object
-        Type: list 
+        Type: list
         Desc: a list which will indicate if the table was dropped and if an effor occured what type of error
         list_retunr[0] -> type: bool; True if sql statement executed with no errors, False if not
         list_return[1] -> if list_return[0] == True; type:integer; the results from the query
@@ -888,7 +986,7 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
-        
+
         bool_query = False
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -897,9 +995,9 @@ class SqlMethods(object):
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#    
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
-        if self._list_conn[0] == True:
+        if self._list_conn[0]:
             # generate cursor
             sql_cursor = self._list_conn[1].cursor()
 
@@ -907,14 +1005,14 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(m_string_sql_query)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # get the columns from the cursor
                 list_raw = sql_cursor.fetchall()
@@ -936,52 +1034,52 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
         list_return.append(bool_query)
-        if bool_query == True:
+        if bool_query:
             list_return.append(list_results)
         else:
-            list_return.append(str_sql_error)
+            list_return.append(string_sql_error)
         return list_return
 
     def insert(self, m_string_table, m_list_columns, m_list_values):
         '''
         this method inserts data into a table
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_table_name
         Type: string
         Desc: table to test if exists
-          
+
         m_list_columns
         Type: list
         Desc: the string of column names seperated by comas
-          
+
         m_list_values
         Type: list of tuples
         Desc: the list of values that will be inserted into the table in the form of tuples
-          
+
         Important Info:
         below is an example of how the insert into the table will work
         table : persons -> m_table_name
         data types: (%d, %s, %s) -> m_str_data_type
         values: [(1, 'John Smith', 'John Doe'), (2, 'Jane Doe', 'Joe Dog'),(3, 'Mike T.', 'Sarah H.')] -> m_list_values
-        
+
         only the %s and %d data types are supported for the execute() and executemany() methods
         anything other than an integer (%d, signed integer) needs to be a %s, type checking is condcuted
         internally
-         
-        cursor.executemany( 
+
+        cursor.executemany(
         "INSERT INTO persons VALUES (%d, %s, %s)",
         [(1, 'John Smith', 'John Doe'),
         (2, 'Jane Doe', 'Joe Dog'),
         (3, 'Mike T.', 'Sarah H.')])
-        
+
         To insert into a wide table use the below format
         INSERT INTO table_name(column_name_01, column_name_02, column_name_03, column_name_04)
         VALUES (value_01, value_02, value_03, value_04);
-        
+
         Return:
         object
         Type: list
@@ -998,15 +1096,15 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
-        
-        str_sql_error = ''
+
+        string_sql_error = ''
         string_data_type = ''
-        str_sql_insert = 'INSERT INTO ' + m_string_table 
+        str_sql_insert = 'INSERT INTO ' + m_string_table
         str_sql_columns = self._build_column_string(m_list_columns, True)
 
-        bool_insert_into_table = False
+        bool_bi_insert = False
         int_segement_limit = 100000
-        str_sql_error = 'no sql connection'
+        string_sql_error = 'no sql connection'
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -1014,15 +1112,15 @@ class SqlMethods(object):
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                  
-        
-        if self._list_conn[0] == True:
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+        if self._list_conn[0]:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
 
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # create data type string
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
             if isinstance(m_list_values[0], collections.Sequence) and not isinstance(m_list_values[0], str):
                 int_record_len = len(m_list_values[0])
@@ -1032,33 +1130,33 @@ class SqlMethods(object):
             for int_len in range(0, int_record_len):
                 string_data_type += '%s,'
             string_data_type = '(' + string_data_type[:-1] + ')'
-    
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # build execute many statement
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
             str_sql_statement = str_sql_insert + ' ' + str_sql_columns + ' VALUES ' + string_data_type
 
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # list of tuples for insert
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
             if isinstance(m_list_values[0], collections.Sequence) and not isinstance(m_list_values[0], str):
                 list_insert_many = [tuple(x) for x in m_list_values]
             else:
                 list_insert_many = [tuple(m_list_values)]
 
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # break up insert into segment limits
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
-            
-            int_segments = int(len(list_insert_many) / int_segement_limit)
-            bool_insert_into_table = True
-            str_sql_error = ''
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+            int_segments = int(len(list_insert_many) / int_segement_limit)
+            bool_bi_insert = True
+            string_sql_error = ''
+
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # loop to insert values in list of tuples
-            #------------------------------------------------------------------------------------------------------------------------------------------------------#    
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
             for int_seg in range(0, int_segments + 1):
                 # split variables
@@ -1079,68 +1177,71 @@ class SqlMethods(object):
                 try:
                     sql_cursor.executemany(str_sql_statement, list_insert)
                 except pymssql.OperationalError as oe:
-                    str_sql_error += ';Operational error was raised' + str(oe.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Operational error was raised' + str(oe.args)
+                    bool_bi_insert = False
                 except pymssql.ProgrammingError as pe:
-                    str_sql_error += ';A program error was raised|' + str(pe.args)
-                    bool_insert_into_table = False
-                except pymssql.DatabaseError as dbe:
-                    str_sql_error += ';Database error raised|' + str(dbe.args)
-                    bool_insert_into_table = False
-                except pymssql.DataError as de:
-                    str_sql_error += ';Data error raised|' + str(de.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';A program error was raised|' + str(pe.args)
+                    bool_bi_insert = False
                 except pymssql.IntegrityError as inte:
-                    str_sql_error += ';Integrity error raised|' + str(inte.args)
-                    bool_insert_into_table = False
-                except pymssql.InterfaceError as ife:
-                    str_sql_error += ';Interface error raised|' + str(ife.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Integrity error raised|' + str(inte.args)
+                    bool_bi_insert = False
                 except pymssql.InternalError as ie:
-                    str_sql_error += ';Internal error raised|' + str(ie.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Internal error raised|' + str(ie.args)
+                    bool_bi_insert = False
                 except pymssql.NotSupportedError as nse:
-                    str_sql_error += ';Not supported error raised|' + str(nse.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Not supported error raised|' + str(nse.args)
+                    bool_bi_insert = False
+                except pymssql.DatabaseError as dbe:
+                    string_sql_error += ';Database error raised|' + str(dbe.args)
+                    bool_bi_insert = False
+                except pymssql.DataError as de:
+                    string_sql_error += ';Data error raised|' + str(de.args)
+                    bool_bi_insert = False
+                except pymssql.InterfaceError as ife:
+                    string_sql_error += ';Interface error raised|' + str(ife.args)
+                    bool_bi_insert = False
                 except pymssql.StandardError as se:
-                    str_sql_error += ';Standard error raised|' + str(se.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';Standard error raised|' + str(se.args)
+                    bool_bi_insert = False
                 except pymssql.Error as e:
-                    str_sql_error += ';General error raised|' + str(e.args)
-                    bool_insert_into_table = False
+                    string_sql_error += ';General error raised|' + str(e.args)
+                    bool_bi_insert = False
                 else:
-                    pass
-                    self._list_conn[1].commit()
+                    list_commit = self._commit()
+                    if not list_commit[0]:
+                        string_sql_error += list_commit[1]
+                        bool_bi_insert = False
                 finally:
                     pass
 
             # delete cursor
             sql_cursor.close()
+            del sql_cursor
 
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # append return list
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-        list_return.append(bool_insert_into_table)
-        list_return.append(str_sql_error)
+        list_return.append(bool_bi_insert)
+        list_return.append(string_sql_error)
         return list_return
 
     def create_table(self, m_string_table, m_list_columns, m_bool_wide_table = False, m_bool_compression = True):
         '''
         this method creates a table in a sql database
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_sql_connection
         Type: pymssql connection object
         Desc: this is the connection to the sql server
-        
+
         m_table_name
         Type: string
         Desc: table to test if exists
-          
+
         m_list_columns
         Type: list of strings
         Desc: the columns to create the table
@@ -1148,24 +1249,24 @@ class SqlMethods(object):
                 the name of the column is first, a space, then the data type of the column
                 this must be in a format that the sql database can read
                 example: 'str_OrderNumber varchar(60)' or 'in_LineNumber int' or 'date_CreationDate datetime'
-          
+
         m_bool_wide_table
         Type: boolean
         Desc: flag to indicate if the table should be wide or narrow
-          
+
         m_bool_compression
         Type: boolean
         Desc: flag to enable data compression for the table
-          
+
         Important Info:
         we are assuing the database in the connection is created and the table does not exist
         this method does not check if the table does not exist
-        
+
         a wide table increases the max columns from 1,064 to 30,000; make sure you take into account
         the XML required when adding or reading data from the table; the wide uses a version of a sparse
         matrix to account for data that is not in a column; MAKE SURE a precursor is added to a number 000 to make
         it a valid column name
-        
+
         Return:
         object
         Type: list
@@ -1185,7 +1286,7 @@ class SqlMethods(object):
 
         str_create = 'CREATE TABLE ' + m_string_table + '('
         bool_created = False
-        str_sql_error = 'no sql connection'
+        string_sql_error = 'no sql connection'
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -1193,20 +1294,20 @@ class SqlMethods(object):
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#     
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
-        if self._list_conn[0] == True:
+        if self._list_conn[0]:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
-            str_sql_error = ''
+            string_sql_error = ''
 
-            #------------------------------------------------------------------------------------------------------------------------------------------------------# 
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # create sql statement
-            #------------------------------------------------------------------------------------------------------------------------------------------------------# 
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
             for col_var in m_list_columns:
                 # account for wide or narrow table
-                if m_bool_wide_table == True:
+                if m_bool_wide_table:
                     str_create += col_var + ' SPARSE,'
                 else:
                     str_create += col_var + ','
@@ -1214,33 +1315,33 @@ class SqlMethods(object):
             str_create = str_create[:-1]
 
             # close out statement
-            if m_bool_wide_table == True:
+            if m_bool_wide_table:
                 str_create += ', XML_Record XML COLUMN_SET FOR ALL_SPARSE_COLUMNS) '
             else:
                 str_create += ') '
 
             # add table compression
-            if m_bool_compression == True:
+            if m_bool_compression:
                 str_create += 'WITH (DATA_COMPRESSION = PAGE)'
 
-            #------------------------------------------------------------------------------------------------------------------------------------------------------# 
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # execute sql statement
-            #------------------------------------------------------------------------------------------------------------------------------------------------------# 
-            
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
+
             try:
                 sql_cursor.execute(str_create)
             except pymssql.OperationalError as e:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(e.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 bool_created = True
-                self._list_conn[1].commit()
+                self._commit()
             finally:
                 pass
 
@@ -1252,43 +1353,43 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
         list_return.append(bool_created)
-        list_return.append(str_sql_error)
+        list_return.append(string_sql_error)
         return list_return
 
     def update(self, m_table_name, m_list_columns, m_list_values, m_string_where = ''):
         '''
         this method updates specific columns in a table
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_table_name
         Type: string
         Desc: table to test if exists
-          
+
         m_list_columns
         Type: list
         Desc: the string of column names to update the values
-          
+
         m_list_values
         Type: list
         Desc: the list of values to update the columns
-          
+
         m_string_where
         type: string
         Desc: appended to 'where' to for where statement
-        
+
         Important Info:
         the length of lists m_list_columns and m_list_values must be in the same length and order
         m_list_columns = ['string_column01', 'string_column02', ...]
         m_list_values = [value_01, value_02, ...]
-        
+
         below is a generic example of how to update a table with values
         UPDATE string_table_name
         SET string_column01 = value_01, string_column02 = value_02, ...
         where condition;
-        
+
         Return:
         object
         Type: list
@@ -1319,9 +1420,9 @@ class SqlMethods(object):
         # build sql strings
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#                
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
-        if self._list_conn[0] == True:
+        if self._list_conn[0]:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
             string_error = ''
@@ -1358,9 +1459,9 @@ class SqlMethods(object):
             # execute sql statement
             #
             #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-            #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#    
-    
-            if bool_list_length_error == False:
+            #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+            if not bool_list_length_error:
                 try:
                     sql_cursor.execute(string_sql_update + string_sql_set + ' ' + string_sql_where)
                 except pymssql.OperationalError as oe:
@@ -1369,24 +1470,24 @@ class SqlMethods(object):
                 except pymssql.ProgrammingError as pe:
                     string_error = 'A program error was raised|'
                     string_error += str(pe.args)
-                except pymssql.DatabaseError as dbe:
-                    string_error = 'Database error raised|'
-                    string_error += str(dbe.args)
-                except pymssql.DataError as de:
-                    string_error = 'Data error raised;'
-                    string_error += str(de.args)
-                except pymssql.IntegrityError as inte:
-                    string_error = 'Integrity error raised;'
-                    string_error += str(inte.args)
-                except pymssql.InterfaceError as ife:
-                    string_error = 'Interface error raised;'
-                    string_error += str(ife.args)
                 except pymssql.InternalError as ie:
                     string_error = 'Internal error raised;'
                     string_error += str(ie.args)
                 except pymssql.NotSupportedError as nse:
                     string_error = 'Not supported error raised;'
                     string_error += str(nse.args)
+                except pymssql.IntegrityError as inte:
+                    string_error = 'Integrity error raised;'
+                    string_error += str(inte.args)
+                except pymssql.DatabaseError as dbe:
+                    string_error = 'Database error raised|'
+                    string_error += str(dbe.args)
+                except pymssql.DataError as de:
+                    string_error = 'Data error raised;'
+                    string_error += str(de.args)
+                except pymssql.InterfaceError as ife:
+                    string_error = 'Interface error raised;'
+                    string_error += str(ife.args)
                 except pymssql.StandardError as se:
                     string_error = 'Standard error raised;'
                     string_error += str(se.args)
@@ -1396,7 +1497,7 @@ class SqlMethods(object):
                 else:
                     string_error = ''
                     bool_return = True
-                    #self._list_conn[1].commit()
+                    self._commit()
                 finally:
                     pass
 
@@ -1409,7 +1510,7 @@ class SqlMethods(object):
         # return value
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-        if bool_return & ~bool_list_length_error == True:
+        if bool_return and not bool_list_length_error:
             bool_return = True
         else:
             bool_return = False
@@ -1421,27 +1522,27 @@ class SqlMethods(object):
     def delete_records(self, m_table_name, m_list_where):
         '''
         this method deletes records in the table based on the where clauses in the list
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_table_name
         Type: string
         Desc: table to test if exists
-          
+
         m_list_where
         Type: list
         Desc: the list of where clauses that will identify the records to delete in the table
-          
+
         Important Info:
         below is an example of how delete records in a table (sql)
         DELETE FROM Customers # this is the table name
         WHERE CustomerName='Alfreds Futterkiste' # this is the beginning of the where clauses
         AND ContactName='Maria Anders'
-        
+
         the 'AND' / 'OR' needs to be included in the where clauses
-        
+
         Return:
         object
         Type: list
@@ -1458,23 +1559,23 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
-        
-        str_sql_error = 'no sql connection'
+
+        string_sql_error = 'no sql connection'
         str_sql_delete_records = 'DELETE FROM ' + m_table_name + ' WHERE '
-        bool_insert_into_table = False
-        
+        bool_bi_insert = False
+
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#      
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
-        if self._list_conn[0] == True:
+        if self._list_conn[0]:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
-            str_sql_error = ''
+            string_sql_error = ''
 
             # add where clauses to sql statement
             for string_w in m_list_where:
@@ -1484,38 +1585,38 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(str_sql_delete_records)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
-            except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
-            except pymssql.DatabaseError as dbe:
-                str_sql_error = 'Database error raised|'
-                str_sql_error += str(dbe.args)
-            except pymssql.DataError as de:
-                str_sql_error = 'Data error raised|'
-                str_sql_error += str(de.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.IntegrityError as inte:
-                str_sql_error = 'Integrity error raised|'
-                str_sql_error += str(inte.args)
+                string_sql_error = 'Integrity error raised|'
+                string_sql_error += str(inte.args)
             except pymssql.InterfaceError as ife:
-                str_sql_error = 'Interface error raised|'
-                str_sql_error += str(ife.args)
+                string_sql_error = 'Interface error raised|'
+                string_sql_error += str(ife.args)
             except pymssql.InternalError as ie:
-                str_sql_error = 'Internal error raised|'
-                str_sql_error += str(ie.args)
+                string_sql_error = 'Internal error raised|'
+                string_sql_error += str(ie.args)
             except pymssql.NotSupportedError as nse:
-                str_sql_error = 'Not supported error raised|'
-                str_sql_error += str(nse.args)
+                string_sql_error = 'Not supported error raised|'
+                string_sql_error += str(nse.args)
+            except pymssql.DatabaseError as dbe:
+                string_sql_error = 'Database error raised|'
+                string_sql_error += str(dbe.args)
+            except pymssql.DataError as de:
+                string_sql_error = 'Data error raised|'
+                string_sql_error += str(de.args)
+            except pymssql.Error as e:
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             except pymssql.StandardError as se:
-                str_sql_error = 'Standard error raised|'
-                str_sql_error += str(se.args)
+                string_sql_error = 'Standard error raised|'
+                string_sql_error += str(se.args)
             else:
-                bool_insert_into_table = True
-                #self._list_conn[1].commit()
+                bool_bi_insert = True
+                self._commit()
             finally:
                 pass
 
@@ -1526,30 +1627,30 @@ class SqlMethods(object):
         # return value
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-        list_return.append(bool_insert_into_table)
-        list_return.append(str_sql_error)
+        list_return.append(bool_bi_insert)
+        list_return.append(string_sql_error)
         return list_return
 
     def get_wide_columns(self, m_string_table):
         '''
-        this method obtains all the columns in a wide table since the wide table is in XML; all the reocords in the table 
+        this method obtains all the columns in a wide table since the wide table is in XML; all the reocords in the table
         need to be checked to determine the entire list of columns
-        
+
         Requirements:
         package xml.dom.minidom
-        
+
         Inputs:
         list_columns
         Type: list of strings
         Desc: the columns from the table to check
-         
+
         list_check
         Type: list of strings
         Desc: the columns names to check in list_columns
-          
+
         Important Info:
         None
-         
+
         Return:
         object
         Type: list
@@ -1558,13 +1659,13 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # lists
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
-    
+
         list_return = list()
 
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
-    
+
         string_sql_query = self.gen_select_statement(m_string_select = '*', m_string_from = m_string_table)
 
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
@@ -1581,17 +1682,17 @@ class SqlMethods(object):
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#    
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
         # check to ensure the table exists
         bool_table_exists = self.table_exists(m_string_table)
 
         # if the table exits
-        if bool_table_exists == True:
+        if bool_table_exists:
             # get all the recoreds (xml)
             list_sql_query_results = self.query_select(string_sql_query)
 
-            if list_sql_query_results[0] == True:
+            if list_sql_query_results[0]:
                 for list_result in list_sql_query_results[1]:
                     # create xml record
                     string_record = '<record>' + list_result[0] + '</record>'
@@ -1604,7 +1705,7 @@ class SqlMethods(object):
                     list_node_names = list()
                     for xml_node in xmlnodelist_xml_nodes:
                         list_node_names.append(xml_node.nodeName)
-                
+
                     #list_columns_temp = [x for x in list_node_names if x not in list_columns]
                     list_return.extend([x for x in list_node_names if x not in list_return])
 
@@ -1614,24 +1715,24 @@ class SqlMethods(object):
     def get_num_columns(self, m_table_name):
         '''
         this method will return the number of columns in a table in a database on a sql server
-        
+
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_table_name
         Type: string
         Desc: the name of the table to get the number of columns
-          
+
         Important Info:
         1. table name must include schema; e.g. schema.table_name
-        2. can be used to determine if a table is a wide or narrow table; 
-                if the table is narrow the number of columns is <= 1,024 
+        2. can be used to determine if a table is a wide or narrow table;
+                if the table is narrow the number of columns is <= 1,024
                 if the table is wide the number of columns will be zero
-        
+
         Return:
         object
-        Type: list 
+        Type: list
         Desc: the number of columns if a narrow table or zero if a wide table; otherwise and error is returned
         list_return[0] -> type: bool; True if sql statement executed with no errors, False if not
         list_return[1] -> if list_return[0] == True; type:integer; the number of columns in the table
@@ -1648,20 +1749,19 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
         string_schema, string_table = m_table_name.split('.')
-        str_query_num_col = self.gen_select_statement(m_string_select = 'COUNT(*)', 
-                                                                                       m_string_from = 'INFORMATION_SCHEMA.COLUMNS', \
-                                                                                       m_string_where = "table_name = N'" + string_table + "' and " + \
-                                                                                                                      "table_schema = N'" + string_schema + "'") 
-        str_query_wide = self.gen_select_statement(m_string_init = 'if exists (',
-                                                                                 m_string_select =  '*', 
-                                                                                 m_string_from = 'INFORMATION_SCHEMA.COLUMNS',
-                                                                                 m_string_where = "TABLE_NAME = N'" + string_table + \
-                                                                                                               "TABLE_SCHEMA = N'" + string_schema + "'" + 
-                                                                                                               "' AND COLUMN_NAME = N'XML_Record'",
-                                                                                 m_string_end = ') select 1 else select 0')
+        str_query_num_col = self.gen_select_statement(
+            m_string_select = 'COUNT(*)',
+            m_string_from = 'INFORMATION_SCHEMA.COLUMNS',
+            m_string_where = "table_name = N'" + string_table + "' and " + "table_schema = N'" + string_schema + "'")
+        str_query_wide = self.gen_select_statement(
+            m_string_init = 'if exists (', m_string_select =  '*',
+            m_string_from = 'INFORMATION_SCHEMA.COLUMNS',
+            m_string_where = "TABLE_NAME = N'" + string_table + "TABLE_SCHEMA = N'" + string_schema + "'" + \
+                "' AND COLUMN_NAME = N'XML_Record'",
+            m_string_end = ') select 1 else select 0')
         bool_num_col = False
         bool_table_wide = False
-        str_sql_error = 'no sql connection'
+        string_sql_error = 'no sql connection'
 
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
@@ -1669,15 +1769,15 @@ class SqlMethods(object):
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#       
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
 
         # return list if no connection
-        list_return = [bool_num_col, str_sql_error]
+        list_return = [bool_num_col, string_sql_error]
 
-        if self._list_conn[0] == True:
+        if self._list_conn[0]:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
-            str_sql_error = ''
+            string_sql_error = ''
 
             #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # testing for narrow table
@@ -1687,14 +1787,14 @@ class SqlMethods(object):
             try:
                 sql_cursor.execute(str_query_num_col)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # get the number of columns
                 int_return = sql_cursor.fetchone()[0]
@@ -1709,19 +1809,19 @@ class SqlMethods(object):
 
             # cursor to test for wide table
             sql_cursor_wide = self._list_conn[1].cursor()
-    
+
             # run query to test for wide table
             try:
                 sql_cursor_wide.execute(str_query_wide)
             except pymssql.OperationalError as oe:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(oe.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(oe.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 # set boolean
                 bool_table_wide = True
@@ -1729,13 +1829,13 @@ class SqlMethods(object):
                 # test if the the table is wide
                 if sql_cursor_wide.fetchone()[0] == 1:
                     int_return -= 1
-    
+
             # fill the return list
             list_return = [bool_num_col]
-            if bool_num_col == True:
+            if bool_num_col:
                 list_return.append(int_return)
             else:
-                list_reutrn.append(str_sql_error)
+                list_return.append(string_sql_error)
 
             # delete cursor
             sql_cursor_wide.close()
@@ -1746,14 +1846,14 @@ class SqlMethods(object):
 
         return list_return
 
-    def alter_table(self, m_string_table, m_string_command = '', m_bool_add_column = False, 
+    def alter_table(self, m_string_table, m_string_command = '', m_bool_add_column = False,
                     m_bool_drop_column = False, m_bool_alter_column = False):
         '''
         This method alters the table with the combination of the boolean flags and the command string
 
         Requirements:
         package pymssql
-        
+
         Inputs:
         m_table_name
         Type: string
@@ -1777,13 +1877,13 @@ class SqlMethods(object):
         m_bool_alter_column
         Type: boolean
         Desc: flag to change a column
-          
+
         Important Info:
         None
-        
+
         Return:
         object
-        Type: list 
+        Type: list
         Desc: the return value to determine if the command executed correctly
         list_return[0] -> type: bool; True if sql statement executed with no errors, False if not
         list_return[1] -> if list_return[0] == True; type:string; empty string
@@ -1793,54 +1893,52 @@ class SqlMethods(object):
         # sequence declarations (list, set, tuple, dictionary, counter)
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-        list_return = list()
-
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
         # variables declarations
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
-        if m_bool_add_column == True:
+        if m_bool_add_column:
             string_sql = 'alter table ' + m_string_table + ' add ' + m_string_command
-        elif m_bool_drop_column == True:
+        elif m_bool_drop_column:
             string_sql = 'alter table ' + m_string_table + ' drop ' + m_string_command
-        elif m_bool_alter_column == True:
+        elif m_bool_alter_column:
             string_sql = 'alter table ' + m_string_table + ' alter column ' + m_string_command
         else:
             pass
         string_error = 'no sql connection'
         bool_alter_table = False
-        
+
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
         #
         # Start
         #
         #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
-        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#            
-        
-        if self._list_conn[0] == True:
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+        if self._list_conn[0]:
             # gen cursor
             sql_cursor = self._list_conn[1].cursor()
             string_error = ''
 
-            #------------------------------------------------------------------------------------------------------------------------------------------------------# 
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
             # execute sql statement
-            #------------------------------------------------------------------------------------------------------------------------------------------------------# 
-            
+            #------------------------------------------------------------------------------------------------------------------------------------------------------#
+
             try:
                 sql_cursor.execute(string_sql)
             except pymssql.OperationalError as e:
-                str_sql_error = 'Operational error was raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'Operational error was raised|'
+                string_sql_error += str(e.args)
             except pymssql.ProgrammingError as pe:
-                str_sql_error = 'A program error was raised|'
-                str_sql_error += str(pe.args)
+                string_sql_error = 'A program error was raised|'
+                string_sql_error += str(pe.args)
             except pymssql.Error as e:
-                str_sql_error = 'General error raised|'
-                str_sql_error += str(e.args)
+                string_sql_error = 'General error raised|'
+                string_sql_error += str(e.args)
             else:
                 bool_alter_table = True
-                #self._list_conn[1].commit()
+                self._commit()
             finally:
                 pass
 
@@ -1852,3 +1950,429 @@ class SqlMethods(object):
         #------------------------------------------------------------------------------------------------------------------------------------------------------#
 
         return [bool_alter_table, string_error]
+
+    def bulk_insert(self, m_string_table, m_string_path, m_var_files = 'all'):
+        '''
+        this method impliments the bulk insert of one or more files from a
+        designated folder
+
+        Requirements:
+        package pymssql
+        package pandas
+
+        Inputs:
+        m_string_table
+        Type: string
+        Desc: the name of the table to insert files
+
+        m_string_path
+        Type: string
+        Desc: path to file directory
+
+        m_var_files
+        Type: string or iterator
+        Desc: multiple options to insert one, multiple or all files in a directory
+            'all' -> insert all files from the directory
+            'file_name.csv' -> inserts only one file from the directory
+            ['file_name_00.csv', 'file_name_01.csv', ..] -> inserts only the files in
+                the list
+
+        Important Info:
+        1. assumes all csv's have a header for the column name
+        2. assumes there are no sub-directories in the target directory or all
+            the desired csv's are in the top level of the target directory
+
+        Return:
+        objects
+        Type: list
+        Desc: results of modified files insert into table
+        list[x][0] -> type: boolean; if insert for file worked
+        list[x][1] -> type: string; error if insert failed, empty string if success
+        '''
+
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # lists declarations
+        #--------------------------------------------------------------------------#
+
+        list_columns = list()
+        list_return = list()
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        bool_files = False
+        bool_dt_process = True
+        bool_create_table = False
+        string_f_option = 'all'
+        self._string_bi_path = m_string_path
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+        #--------------------------------------------------------------------------#
+        # file test to begin process
+        #
+        # question here whether to put all the files found in a list
+        # from a list of files to insert into the db or just to return
+        # False because all the files passed are not in the directory
+        #--------------------------------------------------------------------------#
+
+        # all the files in the folder
+        set_files = self._bi_get_files()
+        if m_var_files == 'all':
+            string_f_option = 'all'
+
+            if len(set_files) > 0:
+                bool_files = True
+                for string_file in set_files:
+                    if string_file[-3:] != 'csv':
+                        bool_files = False
+                        break
+
+            m_var_files = list()
+            m_var_files.extend(set_files)
+
+        # only one file
+        elif isinstance(m_var_files, str):
+            string_f_option = 'one'
+            if m_var_files in set_files:
+                bool_files = True
+
+        # multiple files but not all files in folder
+        elif isinstance(m_var_files, collections.Sequence) and not \
+                isinstance(m_var_files, str):
+            string_f_option = 'multiple'
+            for string_temp_file in m_var_files:
+                if string_temp_file in set_files:
+                    bool_files = True
+                else:
+                    bool_files = False
+                    break
+
+        # catch all
+        else:
+            string_ve = 'variable or object passed for is not one of three'
+            string_ve += " options 'all', '<file_name.csv>',  or a list or tuple"
+            string_ve += ' with strings for file names.'
+            raise ValueError(string_ve)
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # begin the bulk insert process
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+        if bool_files and self.bool_is_connected:
+            #--------------------------------------------------------------------------#
+            # column to create table by file with max length length of
+            # value in column as a string
+            #--------------------------------------------------------------------------#
+
+            dict_meta_files = self._bi_meta_files(
+                string_f_option, m_string_path, set(m_var_files))
+
+            #--------------------------------------------------------------------------#
+            # delete table if exists; create table; column names
+            #--------------------------------------------------------------------------#
+
+            if self.table_exists(m_string_table):
+                bool_dt_process = self.delete_table(m_string_table)
+
+            for string_file in dict_meta_files:
+                dict_columns = dict_meta_files[string_file]
+                for string_column in dict_columns:
+                    list_columns.append(string_column + ' varchar(' + \
+                                                        str(dict_columns[string_column]) + ')')
+
+            if bool_dt_process:
+                bool_create_table = self.create_table(m_string_table, list_columns)
+
+            if bool_create_table:
+                list_table_columns = self.get_table_columns(m_string_table)
+
+            #--------------------------------------------------------------------------#
+            # begin bulk insert process
+            #--------------------------------------------------------------------------#
+
+            if bool_create_table:
+                for string_file in m_var_files:
+                    # read in file
+                    string_path_orig = os.path.join(m_string_path, string_file)
+                    df_insert = pandas.read_csv(string_path_orig)
+                    set_file_columns = set(df_insert.columns)
+                    list_data_none = [None] * len(df_insert)
+
+                    # check columns
+                    for string_table_col in list_table_columns[1]:
+                        if string_table_col not in set_file_columns:
+                            series_col_none = pandas.Series(list_data_none)
+                            series_col_none.index = df_insert.index
+                            df_insert[string_table_col] = series_col_none
+                    df_insert = df_insert[list_table_columns[1]]
+
+                    # insert into database
+                    list_insert_results = self.insert(
+                        m_string_table, list_table_columns[1], df_insert.values.tolist())
+                    list_return.append(list_insert_results)
+            else:
+                string_nc = 'error in creating table in database'
+                list_return = [[False, string_nc]]
+
+        # did not pass file validation
+        elif not bool_files:
+            string_bf = 'the files option passed to m_var_files did not validate'
+            string_bf += ', check the option and the files in designated folder'
+            list_return = [[False, string_bf]]
+
+        # not connected
+        elif not self.bool_is_connected:
+            string_ce = 'there is not a connection to the database'
+            string_ce += ', check connection and try again'
+            list_return = [[False, string_ce]]
+
+        # unkown error
+        else:
+            string_ue = 'validation failed for unkown reason'
+            list_return = [[False, string_ue]]
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return list_return
+
+    def _bi_get_files(self):
+        '''
+        this method returns a set of files in the directory of csv files
+
+        Requirements:
+        package os
+
+        Inputs:
+        n/a
+        Type: n/a
+        Desc: n/a
+
+        Important Info:
+        1. self._string_bi_path needs to be set
+
+        Return:
+        object
+        Type: set
+        Desc: files in the directory
+        '''
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+        if self._string_bi_path is not None:
+            for _, _, list_files in os.walk(self._string_bi_path):
+                break
+        else:
+            raise ValueError('path to folder of data files is not set')
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return set(list_files)
+
+    def _bi_meta_files(self, m_string_file_flag, m_string_path, m_set_files):
+        '''
+        this method gathers meta data on the designated files; the data gathered
+        is the file name, length (number of lines), max string length of column, column
+        names
+
+        Requirements:
+        package pandas
+        package os
+
+        Inputs:
+        m_string_file_flag
+        Type: string
+        Desc: the flag to determine how to get the metadata from each file
+
+        m_string_path
+        Type: string
+        Desc: path to the file directory
+
+        m_set_files
+        Type: set
+        Desc: strings which represent the files in the target directory
+
+        Important Info:
+        None
+
+        Return:
+        object
+        Type: dictionary
+        Desc: files and columns to create the table with the max length of each
+            key -> type: string; file name
+            value -> dictionary; each column of a file that is unique
+                            key -> type: string; column name of file
+                            value -> integer; the max length of the column
+        '''
+
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # lists declarations
+        #--------------------------------------------------------------------------#
+
+        set_table_columns = set()
+        dict_return = dict()
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+        #--------------------------------------------------------------------------#
+        # all files
+        #--------------------------------------------------------------------------#
+
+        for string_file in m_set_files:
+            # add file information to dictionary
+            dict_return[string_file], set_table_columns = self._bi_col_dict(
+                string_file, m_string_path, set_table_columns, dict_return)
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return dict_return
+
+    def _bi_col_dict(self, m_string_file, m_string_path, m_set_columns, m_dict_files):
+        '''
+        this method finds the max length of the column and checks if there was
+        a previous column measured
+
+        Requirements:
+        package pandas
+        package os
+
+        Inputs:
+        m_string_file
+        Type: string
+        Desc: file name
+
+        m_string_path
+        Type: string
+        Desc: file path
+
+        m_set_columns
+        Type: set
+        Desc: columns already searched
+
+        m_dict_files
+        Type: dictionary
+        Desc: of files and unique columns for each file
+        key -> type: string; file name
+        value -> dictionary; each column of a file that is unique
+                        key -> type: string; column name of file
+                        value -> integer; the max length of the column
+
+        Important Info:
+        None
+
+        Return:
+        object, object
+        Type: dictionary, set
+        Desc: file column information, columns found in file
+        '''
+
+        #--------------------------------------------------------------------------#
+        # objects declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # time declarations
+        #--------------------------------------------------------------------------#
+
+        #--------------------------------------------------------------------------#
+        # iterator declarations
+        #--------------------------------------------------------------------------#
+
+        dict_file_col_info = dict()
+
+        #--------------------------------------------------------------------------#
+        # variables declarations
+        #--------------------------------------------------------------------------#
+
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #
+        # Start
+        #
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+        #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#
+
+        #--------------------------------------------------------------------------#
+        # create DataFrame
+        #--------------------------------------------------------------------------#
+
+        string_file_path = os.path.join(m_string_path, m_string_file)
+        df_temp = pandas.read_csv(string_file_path, dtype = str)
+
+        #--------------------------------------------------------------------------#
+        # get column names
+        #--------------------------------------------------------------------------#
+
+        for string_col in df_temp:
+            # get max length of column
+            int_max_len = df_temp[string_col].str.len().max()
+
+            # search through files to get the right column
+            if string_col in m_set_columns and len(m_dict_files) > 0:
+                for string_file in m_dict_files:
+                    if string_file != m_string_file:
+                        dict_cl_temp = m_dict_files.get(string_file)
+                        if dict_cl_temp is not None and string_col in dict_cl_temp \
+                                and int_max_len > dict_cl_temp.get(string_col):
+                            dict_file_col_info.update([(string_col, int_max_len)])
+                            m_dict_files.get(string_file).pop(string_col)
+
+            # if not on columns and no file
+            else:
+                dict_file_col_info.update([(string_col, int_max_len)])
+                m_set_columns.add(string_col)
+
+        #--------------------------------------------------------------------------#
+        # return value
+        #--------------------------------------------------------------------------#
+
+        return dict_file_col_info, m_set_columns
