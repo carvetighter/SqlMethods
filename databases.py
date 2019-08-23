@@ -20,13 +20,22 @@ class DbsBase(object):
 
     def __init__(self):
         '''
+        constuctor for base class
         '''
+        self.__dict_login = {
+            'uid':None,
+            'pwd':None,
+            'database':None,
+            'server':None
+        }
+        self.__list_args = ['server', 'database', 'uid', 'pwd']
+        self.__db_conn = None
         return
 
 class SqlDatabase(DbsBase):
     '''
     This class makes it easier to connect and work with a sql server.
-    The list of methods below are firther defined in the methods themselves.
+    The list of methods below are further defined in the methods themselves.
 
     Requirements:
     package pymssql
@@ -100,11 +109,11 @@ class SqlDatabase(DbsBase):
         list_conn_param[1] -> type: string; host or server
         list_conn_param[2] -> type: string; user password
         list_conn_param[3] -> type: string; database name
-        
+
         Important Info:
         1. the paramaters must use r'xxxxx' as raw strings but is used in relational expressions,
             eg. m_string_user = r'user name'
-        
+
         Objects and Properties:
         list_conn
         Type: list
