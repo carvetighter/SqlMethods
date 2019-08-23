@@ -2,10 +2,11 @@ name: sql_meth
 channels:
   - defaults
 dependencies:
-  - pymssql
-  - pandas
-  - numpy
-  - pip
+  - python=3.7.4
+  - pymssql=2.1.4
+  - pandas=0.25.0
+  - numpy=1.16.4
+  - pip=19.2.2
   - pip:
     - TimerWrapper
 
