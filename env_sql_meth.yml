@@ -1,0 +1,11 @@
+name: sql_meth
+channels:
+  - defaults
+dependencies:
+  - pymssql
+  - pandas
+  - numpy
+  - pip
+  - pip:
+    - TimerWrapper
+
