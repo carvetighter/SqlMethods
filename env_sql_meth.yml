@@ -7,6 +7,8 @@ dependencies:
   - pandas=0.25.0
   - numpy=1.16.4
   - pip=19.2.2
+  - pytest=5.0.1
+  - pylint=2.3.1
   - pip:
     - TimerWrapper
 
